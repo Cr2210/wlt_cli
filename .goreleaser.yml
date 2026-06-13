@@ -1,0 +1,96 @@
+# .goreleaser.yml
+# 用法:
+#   本地测试:    goreleaser release --snapshot --clean
+#   自动发布:    git tag v0.2.0 && git push origin v0.2.0  (GitHub Actions 自动构建+发布)
+#   安装:        curl -fsSL https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.sh | sh
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    # 打包 skills/ 为 wlt-skills.zip
+    - mkdir -p dist
+    - bash -c 'cd skills && zip -r ../dist/wlt-skills.zip .'
+
+builds:
+  - main: .
+    binary: wlt
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/weiliantong/cli/internal/build.Version={{.Version}}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}-
+      {{ .Os }}-
+      {{ .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE*
+      - README*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+# 发布到 GitHub Releases（由 GitHub Actions 触发）
+release:
+  # GitHub 仓库名（确保和实际仓库一致）
+  github:
+    owner: Cr2210
+    name: wlt_cli
+  # Release 名称模板
+  name_template: "{{ .Tag }}"
+  # 草稿模式（true=需要手动点发布，false=直接发布）
+  draft: false
+  # 预发布标记（对 v0.x 版本标记为预发布）
+  prerelease: auto
+  # Release 说明
+  header: |
+    ## wlt CLI — 维链通 ERP 命令行工具
+
+    ### 安装
+
+    **Linux / macOS:**
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.sh | sh
+    ```
+
+    **Windows (PowerShell):**
+    ```powershell
+    irm https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.ps1 | iex
+    ```
+
+    **指定版本:**
+    ```bash
+    WLT_VERSION=v0.2.0 curl -fsSL https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.sh | sh
+    ```
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+# 额外上传 skills zip 到 Release
+extra_files:
+  - glob: dist/wlt-skills.zip

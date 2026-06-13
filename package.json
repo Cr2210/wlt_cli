@@ -1,0 +1,33 @@
+{
+  "name": "@weiliantong/cli",
+  "version": "0.1.0",
+  "description": "维链通 ERP CLI 工具 - AI Agent 原生设计",
+  "bin": {
+    "wlt": "./bin/run.js"
+  },
+  "files": [
+    "bin/",
+    "skills/"
+  ],
+  "scripts": {
+    "postinstall": "node bin/install.js"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "keywords": [
+    "cli",
+    "erp",
+    "weiliantong",
+    "wlt",
+    "ai-agent"
+  ],
+  "license": "UNLICENSED",
+  "private": true
+}

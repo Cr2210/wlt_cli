@@ -1,0 +1,21 @@
+# Binaries
+wlt
+cli
+*.exe
+
+# Build output
+/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Config (never commit tokens)
+config.yaml
+
+# npm
+node_modules/

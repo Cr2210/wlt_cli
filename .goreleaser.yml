@@ -79,6 +79,9 @@ release:
     ```bash
     WLT_VERSION=v0.2.0 curl -fsSL https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.sh | sh
     ```
+  # 额外上传 skills zip 到 Release
+  extra_files:
+    - glob: dist/wlt-skills.zip
 
 snapshot:
   version_template: "{{ incpatch .Version }}-snapshot"
@@ -90,7 +93,3 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^chore:"
-
-# 额外上传 skills zip 到 Release
-extra_files:
-  - glob: dist/wlt-skills.zip

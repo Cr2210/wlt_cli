@@ -31,10 +31,7 @@ builds:
 
 archives:
   - id: default
-    name_template: >-
-      {{ .ProjectName }}-
-      {{ .Os }}-
-      {{ .Arch }}
+    name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
     formats:
       - tar.gz
     format_overrides:

@@ -71,12 +71,20 @@ function Get-Arch {
 function Resolve-LatestVersion {
   if ($Version -eq "latest") {
     try {
-      Invoke-WebRequest -Uri "https://github.com/$Repo/releases/latest" `
-        -MaximumRedirection 0 -ErrorAction SilentlyContinue -UseBasicParsing 2>$null | Out-Null
+      $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing
+      if ($release.tag_name) {
+        $script:Version = $release.tag_name
+        return
+      }
+    } catch {}
+    try {
+      $resp = Invoke-WebRequest -Uri "https://github.com/$Repo/releases/latest" `
+        -MaximumRedirection 0 -UseBasicParsing 2>$null
     } catch {
-      if ($_.Exception.Response.Headers.Location) {
-        $location = $_.Exception.Response.Headers.Location.ToString()
-        $script:Version = ($location -split "/tag/")[-1].Trim()
+      $loc = $null
+      try { $loc = $_.Exception.Response.GetResponseHeader("Location") } catch {}
+      if ($loc) {
+        $script:Version = ($loc -split "/tag/")[-1].Trim()
         return
       }
     }

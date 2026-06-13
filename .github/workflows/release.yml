@@ -1,0 +1,43 @@
+# .github/workflows/release.yml
+# 推送 tag 时自动构建 + 发布到 GitHub Releases
+#
+# 触发方式:
+#   git tag v0.2.0
+#   git push origin v0.2.0
+#
+# 安装方式:
+#   curl -fsSL https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.sh | sh
+#   irm https://raw.githubusercontent.com/Cr2210/wlt_cli/main/scripts/install.ps1 | iex
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -9,9 +9,8 @@ version: 2
 before:
   hooks:
     - go mod tidy
-    # 打包 skills/ 为 wlt-skills.zip
-    - mkdir -p dist
-    - bash -c 'cd skills && zip -r ../dist/wlt-skills.zip .'
+    # 打包 skills/ 为 wlt-skills.zip（放到项目根目录，避免 dist 非空报错）
+    - bash -c 'cd skills && zip -r ../wlt-skills.zip .'
 
 builds:
   - main: .
@@ -31,14 +30,17 @@ builds:
       - -s -w -X github.com/weiliantong/cli/internal/build.Version={{.Version}}
 
 archives:
-  - format: tar.gz
+  - id: default
     name_template: >-
       {{ .ProjectName }}-
       {{ .Os }}-
       {{ .Arch }}
+    formats:
+      - tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     files:
       - LICENSE*
       - README*
@@ -81,7 +83,7 @@ release:
     ```
   # 额外上传 skills zip 到 Release
   extra_files:
-    - glob: dist/wlt-skills.zip
+    - glob: ./wlt-skills.zip
 
 snapshot:
   version_template: "{{ incpatch .Version }}-snapshot"

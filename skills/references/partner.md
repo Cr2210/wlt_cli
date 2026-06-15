@@ -1,6 +1,6 @@
 # 客户供应商 (customer / supplier)
 
-客户 (`customer`, partnerType=1) 和供应商 (`supplier`, partnerType=2) 共享相同的命令结构。
+客户 (`customer`) 和供应商 (`supplier`) 共享相同的命令结构。wlt 自动向后端传递类型参数（客户 `type=CUSTOMER`、供应商 `type=SUPPLIER`），无需手动指定。
 
 ## 客户管理 (`wlt customer`)
 

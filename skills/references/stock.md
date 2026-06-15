@@ -18,7 +18,7 @@
 |------|------|---------|
 | `wlt stock query get` | 获取单个库存 | `--id` 或 `--product-id` + `--warehouse-id` |
 | `wlt stock query list` | 分页查询库存 | `--page-no`, `--page-size`, `--warehouse-id`, `--product-name` |
-| `wlt stock query count` | 统计库存数量 | `--warehouse-id`（可选）, `--metric-name`（可选） |
+| `wlt stock query count` | 统计库存数量 | `--product-id`（**必填**，后端强制）, `--warehouse-id`（可选）, `--metric-name`（可选） |
 | `wlt stock query batch-detail` | 获取批次明细 | `--page-no`, `--page-size`, `--product-id`, `--warehouse-id` |
 
 ## 入库单 (`wlt stock in`)
@@ -50,7 +50,7 @@
 |------|------|---------|
 | `wlt stock record list` | 分页查询明细 | `--page-no`, `--page-size`, `--product-id`, `--warehouse-id` |
 | `wlt stock record get --id <N>` | 获取明细详情 | `--id`（必填） |
-| `wlt stock record count` | 获取明细总数量 | 无 |
+| `wlt stock record count` | 获取明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
 
 ## 常见工作流
 

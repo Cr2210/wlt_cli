@@ -8,7 +8,7 @@ cli_version: ">=0.1.0"
 
 通过 `wlt` 命令管理维链通 ERP 系统全部能力。
 
-> ⚠️ **命令可用性取决于环境配置**。本文档基于 wlt v0.1.0 实测编写，所有命令均需先完成 `wlt auth login` 认证。使用 `--profile sit` 连接 SIT 环境，`--profile prod` 连接生产环境。实际调用前可用 `wlt --help` 或 `wlt api GET <path> --dry-run` 验证。
+> ⚠️ **命令可用性取决于环境配置**。本文档基于 wlt v0.1.7 实测编写（已修复 customer/supplier/contract/quality-weight/stock 等模块的类型参数与解析 bug），所有命令均需先完成 `wlt auth login` 认证。使用 `--profile sit` 连接 SIT 环境，`--profile prod` 连接生产环境。验证命令结构用 `wlt <cmd> --help`；验证请求用 `wlt api GET <path> --dry-run`（注意：仅 `wlt api` 支持 `--dry-run`，业务子命令不支持）。各端点实测可用性见文末「实测可用性速查」。
 
 ## 严格禁止 (NEVER DO)
 
@@ -26,7 +26,7 @@ cli_version: ">=0.1.0"
 - 危险操作（删除、状态变更）必须先向用户确认后再执行
 - 删除操作接受多个 ID（逗号分隔），确认时必须展示影响范围
 - 状态更新需遵循业务流转规则（如：未审核→已审核→已拒绝）
-- 分页查询默认 `page_no=1`, `page_size=20`，大数据量需分页遍历
+- 分页查询默认 `--page-no=1`, `--page-size=20`（flag 用连字符短横线，不是下划线；后端字段为驼峰 `pageNo`/`pageSize`），大数据量需分页遍历
 - 使用 `--profile` 切换环境，`--quiet` 静默模式
 
 ## 模块总览
@@ -54,6 +54,10 @@ cli_version: ">=0.1.0"
 | `settlement` | 结算管理：运单结算 | [settlement-invoice.md](./references/settlement-invoice.md) |
 | `invoice` | 发票管理：发票 CRUD | [settlement-invoice.md](./references/settlement-invoice.md) |
 | `system` | 系统管理：用户 / 部门 / 角色 / 菜单 / 字典 | [system.md](./references/system.md) |
+| `operate-log` | 操作日志查询 | 本文档「辅助模块」章节 |
+| `data-sync` | 数据同步消息查询 / 重发 | 本文档「辅助模块」章节 |
+| `profit-event` | 利润事件查询 / 统计 / 类型 | 本文档「辅助模块」章节 |
+| `profit-calculation` / `job-trigger` | 利润重算 / 定时任务触发（多为写操作） | 本文档「辅助模块」章节 |
 | `api` | 通用 API 调用（兜底） | 本文档「通用 API 调用」章节 |
 
 ## 核心流程（每次请求必须执行）
@@ -112,6 +116,51 @@ wlt api GET /erp/stock/page --params '{"pageNo":1,"pageSize":20}'
 # 调试（不发送请求）
 wlt api GET /erp/warehouse/page --dry-run
 ```
+
+## 辅助模块
+
+以下模块命令较少，未单独建参考文件，统一在此说明。**注意**：profit-event / data-sync / operate-log 等部分端点在 SIT 环境实测返回后端异常或权限不足，详见文末「实测可用性速查」。
+
+### 操作日志 operate-log
+
+```bash
+wlt operate-log list --page-size 20          # 分页查询操作日志
+# 可选过滤：--module <模块> --type <操作类型> --user-name <用户>
+```
+
+> 实测：该端点要求业务编号参数，SIT 纯列表查询返回后端异常。查特定单据的操作记录建议用 `wlt api GET /erp/operate-log/page --params '{...}'` 兜底。
+
+### 数据同步 data-sync
+
+```bash
+wlt data-sync list --page-size 20            # 分页查询数据同步消息
+wlt data-sync get --id <ID>                  # 获取同步消息详情
+wlt data-sync resend --id <ID>               # 重新发送
+```
+
+> 实测：SIT 该端点返回 403（无权限）。
+
+### 利润 profit-event / profit-calculation
+
+```bash
+wlt profit-event list --page-size 20         # 利润事件列表
+wlt profit-event statistics                  # 利润事件统计
+wlt profit-event types                       # 利润事件类型
+wlt profit-event health                      # 健康检查
+wlt profit-event retry --id <ID>             # 重试事件
+wlt profit-calculation batch-recalculate-all # 批量重算（写操作，谨慎）
+```
+
+> 实测：profit-event 的 list/statistics/types 在 SIT 返回后端 404 异常。
+
+### 定时任务 job-trigger
+
+```bash
+wlt job-trigger execute-product-cost         # 执行产品成本记录
+wlt job-trigger execute-receivable-balance   # 执行应收余额计算
+```
+
+> 均为手动触发写操作，执行前必须获得用户确认。
 
 ## 常见工作流
 
@@ -203,7 +252,7 @@ Step 3 → 执行命令
 | 2 | `config` | 配置错误 | 运行 `wlt config init` |
 | 3 | `authentication` | 认证错误 | 运行 `wlt auth login` |
 | 4 | `validation` | 参数错误 | 检查命令参数 |
-| 5 | `api_error` | API 错误 | 使用 `--dry-run` 调试 |
+| 5 | `api_error` | API 错误 | 用 `wlt api GET <path> --dry-run` 调试（仅 `wlt api` 支持 `--dry-run`） |
 | 6 | `network` | 网络错误 | 检查网络连接 |
 
 ### 错误处理流程
@@ -214,6 +263,34 @@ Step 3 → 执行命令
 4. 遇到网络错误（退出码 6），检查网络和配置中的 BaseURL
 5. **严禁**连续重试超过 3 次相同命令；3 次仍失败必须停止并报告
 6. 仍然失败，**立即停止**并报告完整错误信息
+
+## 实测可用性速查（SIT 环境，v0.1.7）
+
+> v0.1.7 在 SIT 实测结论。✅ 可用；⚠️ 需必填参数；❌ 当前后端/权限问题（非 wlt 缺陷，改用 `wlt api` 兜底或联系管理员）。
+
+### ✅ 完全可用
+- **库存 stock**：warehouse / query(list·count·get) / record(list) / in / out / move / check
+- **产品 product**：list / simple-list / category / unit / metrics / get-metrics / metrics item-list
+- **客户/供应商**：list / simple-list / page-count / credit（仅客户）/ invoice / settlement
+- **合同 contract**：list / page-count（长协·业务·运输自动按类型）/ provision
+- **销售/采购**：sale out / purchase in
+- **财务 finance**：account / account-settlement / invoice-apply / payment / receipt / receipt-payment / refund / settlement / write-off（list·summary·get）
+- **订单/生产**：order main·plan / produce main(含 quality-page)·plan
+- **运单/质检/称重**：waybill push-config get / quality inspection list·summary / weight waybill list
+- **统计/报表/首页/大屏**：stats / report / homepage / screen 全部可用
+- **系统/结算/发票**：system user·dept / settlement main / invoice main
+
+### ⚠️ 需必填参数
+- `product get-metrics --id <产品ID>`
+- `product metrics item-list --metric-id <指标ID>`
+- `stock query count --product-id <产品ID>`（后端强制）
+- `quality weight order-page/order-summary --type SALE|PURCHASE`
+- `quality inspection relate-list --business-type <类型> --business-id <ID>`
+
+### ❌ 当前不可用（后端异常或权限）
+- **后端 404/500**：`waybill source list/page-count`、`report stock buy-send/finance/produce/warehouse`、`system role list`、`system dict type-list/data-list`、`profit-event list/statistics/types`、`stock record count`、`quality weight waybill-page/waybill-summary`、`operate-log list`
+- **权限 403**：`sale return list`、`purchase return list`、`system menu list`、`data-sync list`
+- **命令未注册**：`supplier credit *`（客户有 credit，供应商未实现；`supplier --help` 误列）
 
 ## 详细参考（按需读取）
 

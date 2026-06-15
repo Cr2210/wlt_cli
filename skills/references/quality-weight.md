@@ -6,11 +6,11 @@
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt quality weight order-page` | 订单称重分页 | `--order-id`, `--product-id`, `--page-no`, `--page-size` |
-| `wlt quality weight order-summary` | 订单称重汇总 | `--order-id`, `--product-id` |
+| `wlt quality weight order-page` | 订单称重分页 | `--type`（**必填** SALE/PURCHASE）, `--order-id`, `--product-id`, `--page-no`, `--page-size` |
+| `wlt quality weight order-summary` | 订单称重汇总 | `--type`（**必填** SALE/PURCHASE）, `--order-id`, `--product-id` |
 | `wlt quality weight order-export` | 订单称重导出 | `--order-id`, `--product-id` |
-| `wlt quality weight waybill-page` | 运单称重分页 | `--waybill-id`, `--product-id`, `--page-no`, `--page-size` |
-| `wlt quality weight waybill-summary` | 运单称重汇总 | `--waybill-id`, `--product-id` |
+| `wlt quality weight waybill-page` | 运单称重分页 | ⚠️ SIT 后端异常，暂不可用 |
+| `wlt quality weight waybill-summary` | 运单称重汇总 | ⚠️ SIT 后端异常，暂不可用 |
 | `wlt quality weight waybill-export` | 运单称重导出 | `--waybill-id`, `--product-id` |
 
 ## 质检单 (`wlt quality inspection`)

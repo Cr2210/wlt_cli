@@ -20,16 +20,23 @@ var settlementFilters = []cmdutil.FlagSpec{
 }
 
 // NewSettlementGroup creates the settlement sub-command group for a partner.
-func NewSettlementGroup() *cobra.Command {
-	settlementCmd := cmdutil.NewCRUDGroup(cmdutil.CRUDConfig{
-		Name:         "settlement",
-		APIPath:      "/erp/business-partner-settlement",
-		Label:        "结算信息",
-		SingleDelete: true,
-		SkipStatus:   true,
-		ListFilters:  settlementFilters,
-	})
-	settlementCmd.AddCommand(cmdutil.CrudPageCountCmd("/erp/business-partner-settlement", "结算信息", settlementFilters))
+// partnerType ("CUSTOMER"/"SUPPLIER") is sent as a fixed query param because the
+// shared /erp/business-partner-settlement endpoint requires it to scope results.
+func NewSettlementGroup(partnerType string) *cobra.Command {
+	settlementCmd := &cobra.Command{
+		Use:   "settlement",
+		Short: "结算信息管理",
+	}
+	const apiPath = "/erp/business-partner-settlement"
+	fixed := map[string]any{"type": partnerType}
+	settlementCmd.AddCommand(
+		cmdutil.CrudListCmdWithFixed(apiPath, "结算信息", settlementFilters, fixed),
+		cmdutil.CrudGetCmd(apiPath, "结算信息"),
+		cmdutil.CrudCreateCmd(apiPath, "结算信息"),
+		cmdutil.CrudUpdateCmd(apiPath, "结算信息"),
+		cmdutil.CrudDeleteCmd(apiPath, "结算信息", true),
+	)
+	settlementCmd.AddCommand(cmdutil.CrudPageCountCmdWithFixed(apiPath, "结算信息", settlementFilters, fixed))
 	settlementCmd.AddCommand(newSettlementListByPartnerCmd())
 	settlementCmd.AddCommand(newSettlementDeleteListCmd())
 	return settlementCmd

@@ -20,13 +20,13 @@ var contractFilters = []cmdutil.FlagSpec{
 
 func init() {
 	contractCmd.AddCommand(
-		cmdutil.CrudListCmd("/erp/contract", "长协合同", contractFilters),
+		cmdutil.CrudListCmdWithFixed("/erp/contract", "长协合同", contractFilters, map[string]any{"type": "LONG"}),
 		cmdutil.CrudCreateCmd("/erp/contract", "长协合同"),
 		cmdutil.CrudUpdateCmd("/erp/contract", "长协合同"),
 		cmdutil.CrudDeleteCmd("/erp/contract", "长协合同", false),
 		newContractGetCmd(),
 		newContractUpdateStatusCmd(),
-		cmdutil.CrudPageCountCmd("/erp/contract", "长协合同", contractFilters),
+		cmdutil.CrudPageCountCmdWithFixed("/erp/contract", "长协合同", contractFilters, map[string]any{"type": "LONG"}),
 	)
 }
 

@@ -17,13 +17,13 @@ func init() {
 		Short: "运输合同管理",
 	}
 	transportCmd.AddCommand(
-		cmdutil.CrudListCmd("/erp/transport-contract", "运输合同", contractFilters),
+		cmdutil.CrudListCmdWithFixed("/erp/contract", "运输合同", contractFilters, map[string]any{"type": "TRANSPORT"}),
 		cmdutil.CrudCreateCmd("/erp/transport-contract", "运输合同"),
 		cmdutil.CrudUpdateCmd("/erp/transport-contract", "运输合同"),
 		cmdutil.CrudDeleteCmd("/erp/transport-contract", "运输合同", false),
 		cmdutil.CrudGetCmd("/erp/transport-contract", "运输合同"),
 		newTransportContractUpdateStatusCmd(),
-		cmdutil.CrudPageCountCmd("/erp/transport-contract", "运输合同", contractFilters),
+		cmdutil.CrudPageCountCmdWithFixed("/erp/contract", "运输合同", contractFilters, map[string]any{"type": "TRANSPORT"}),
 	)
 	contractCmd.AddCommand(transportCmd)
 }

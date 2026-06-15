@@ -32,7 +32,7 @@ func init() {
 
 func newQualityWeightOrderPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var orderId, productId string
+	var orderId, productId, orderType string
 
 	c := &cobra.Command{
 		Use:   "order-page",
@@ -44,6 +44,7 @@ func newQualityWeightOrderPageCmd() *cobra.Command {
 			params := map[string]any{
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
+				"type":     orderType,
 			}
 			if orderId != "" {
 				params["orderId"] = orderId
@@ -61,15 +62,17 @@ func newQualityWeightOrderPageCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
+	c.Flags().StringVar(&orderType, "type", "", "订单类型（SALE/PURCHASE）")
 	c.Flags().StringVar(&orderId, "order-id", "", "订单 ID")
 	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
+	_ = c.MarkFlagRequired("type")
 	return c
 }
 
 // ---- 订单称重汇总 ----
 
 func newQualityWeightOrderSummaryCmd() *cobra.Command {
-	var orderId, productId string
+	var orderId, productId, orderType string
 
 	c := &cobra.Command{
 		Use:   "order-summary",
@@ -78,7 +81,7 @@ func newQualityWeightOrderSummaryCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			params := map[string]any{}
+			params := map[string]any{"type": orderType}
 			if orderId != "" {
 				params["orderId"] = orderId
 			}
@@ -93,8 +96,10 @@ func newQualityWeightOrderSummaryCmd() *cobra.Command {
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
+	c.Flags().StringVar(&orderType, "type", "", "订单类型（SALE/PURCHASE）")
 	c.Flags().StringVar(&orderId, "order-id", "", "订单 ID")
 	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
+	_ = c.MarkFlagRequired("type")
 	return c
 }
 

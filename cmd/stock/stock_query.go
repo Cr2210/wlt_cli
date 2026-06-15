@@ -94,6 +94,7 @@ func newStockQueryListCmd() *cobra.Command {
 
 func newStockQueryCountCmd() *cobra.Command {
 	var (
+		productId   int64
 		warehouseId int64
 		metricName  string
 	)
@@ -104,7 +105,7 @@ func newStockQueryCountCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock/get-count", nil)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock/get-count", map[string]any{"productId": productId})
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("统计库存失败: %s", err), "")
 			}
@@ -128,8 +129,10 @@ func newStockQueryCountCmd() *cobra.Command {
 			return cmdutil.OutputJSON(result)
 		},
 	}
+	c.Flags().Int64Var(&productId, "product-id", 0, "产品 ID")
 	c.Flags().Int64Var(&warehouseId, "warehouse-id", 0, "仓库 ID（可选，获取指定仓库统计）")
 	c.Flags().StringVar(&metricName, "metric-name", "", "指标名称（可选）")
+	_ = c.MarkFlagRequired("product-id")
 	return c
 }
 

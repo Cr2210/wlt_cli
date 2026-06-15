@@ -24,10 +24,12 @@ func OutputRaw(data []byte) {
 }
 
 // ParsePagedJSON extracts paginated data from API response and outputs it.
+// Total is decoded via json.Number so backends that return total as a JSON
+// string (e.g. /erp/weight/page) parse correctly alongside numeric ones.
 func ParsePagedJSON(data json.RawMessage, pageNo, pageSize int) error {
 	var paged struct {
 		List  json.RawMessage `json:"list"`
-		Total int64           `json:"total"`
+		Total json.Number     `json:"total"`
 	}
 	if err := json.Unmarshal(data, &paged); err != nil {
 		return output.NewExitError(5, fmt.Sprintf("解析响应失败: %s", err), "")
@@ -36,5 +38,6 @@ func ParsePagedJSON(data json.RawMessage, pageNo, pageSize int) error {
 	if err := json.Unmarshal(paged.List, &list); err != nil {
 		list = []any{}
 	}
-	return OutputPagedJSON(list, paged.Total, pageNo, pageSize)
+	total, _ := paged.Total.Int64()
+	return OutputPagedJSON(list, total, pageNo, pageSize)
 }

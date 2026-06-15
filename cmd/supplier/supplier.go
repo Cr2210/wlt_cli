@@ -13,9 +13,9 @@ var supplierCmd = &cobra.Command{
 }
 
 func init() {
-	partner.AddPartnerCommands(supplierCmd, "2", "供应商")
+	partner.AddPartnerCommands(supplierCmd, "SUPPLIER", "供应商")
 	supplierCmd.AddCommand(partner.NewInvoiceGroup())
-	supplierCmd.AddCommand(partner.NewSettlementGroup())
+	supplierCmd.AddCommand(partner.NewSettlementGroup("SUPPLIER"))
 }
 
 // Register adds the supplier command to the parent command.

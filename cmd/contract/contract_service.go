@@ -17,13 +17,13 @@ func init() {
 		Short: "业务合同管理",
 	}
 	serviceCmd.AddCommand(
-		cmdutil.CrudListCmd("/erp/service-contract", "业务合同", contractFilters),
+		cmdutil.CrudListCmdWithFixed("/erp/contract", "业务合同", contractFilters, map[string]any{"type": "SERVICE"}),
 		cmdutil.CrudCreateCmd("/erp/service-contract", "业务合同"),
 		cmdutil.CrudUpdateCmd("/erp/service-contract", "业务合同"),
 		cmdutil.CrudDeleteCmd("/erp/service-contract", "业务合同", false),
 		newServiceContractGetCmd(),
 		newServiceContractUpdateStatusCmd(),
-		cmdutil.CrudPageCountCmd("/erp/service-contract", "业务合同", contractFilters),
+		cmdutil.CrudPageCountCmdWithFixed("/erp/contract", "业务合同", contractFilters, map[string]any{"type": "SERVICE"}),
 	)
 	contractCmd.AddCommand(serviceCmd)
 }

@@ -52,7 +52,16 @@ func AddCRUDToParent(parent *cobra.Command, cfg CRUDConfig) {
 
 // ---- Paginated list ----
 
+// CrudListCmd builds a paginated list command. Kept for backward compatibility.
 func CrudListCmd(apiPath, label string, filters []FlagSpec) *cobra.Command {
+	return CrudListCmdWithFixed(apiPath, label, filters, nil)
+}
+
+// CrudListCmdWithFixed is like CrudListCmd but merges fixed query params into the
+// request. Use it when a shared backend endpoint requires a discriminator the
+// caller always knows (e.g. contract type, business-partner type) that should
+// never be exposed as a user flag.
+func CrudListCmdWithFixed(apiPath, label string, filters []FlagSpec, fixed map[string]any) *cobra.Command {
 	var pageNo, pageSize int
 	c := &cobra.Command{
 		Use:   "list",
@@ -64,6 +73,9 @@ func CrudListCmd(apiPath, label string, filters []FlagSpec) *cobra.Command {
 			params := map[string]any{
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
+			}
+			for k, v := range fixed {
+				params[k] = v
 			}
 			for _, f := range filters {
 				CollectStringFlag(cmd, params, f.Name)
@@ -279,7 +291,13 @@ func CrudSimpleListCmdWithFlags(apiPath, label string, flags []FlagSpec) *cobra.
 
 // ---- Page count ----
 
+// CrudPageCountCmd builds a page-count command. Backward compatible.
 func CrudPageCountCmd(apiPath, label string, filters []FlagSpec) *cobra.Command {
+	return CrudPageCountCmdWithFixed(apiPath, label, filters, nil)
+}
+
+// CrudPageCountCmdWithFixed merges fixed query params, mirroring CrudListCmdWithFixed.
+func CrudPageCountCmdWithFixed(apiPath, label string, filters []FlagSpec, fixed map[string]any) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "page-count",
 		Short: fmt.Sprintf("统计%s数量", label),
@@ -288,6 +306,9 @@ func CrudPageCountCmd(apiPath, label string, filters []FlagSpec) *cobra.Command 
 				return err
 			}
 			params := map[string]any{}
+			for k, v := range fixed {
+				params[k] = v
+			}
 			for _, f := range filters {
 				CollectStringFlag(cmd, params, f.Name)
 			}

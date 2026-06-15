@@ -13,9 +13,9 @@ var customerCmd = &cobra.Command{
 }
 
 func init() {
-	partner.AddPartnerCommands(customerCmd, "1", "客户")
+	partner.AddPartnerCommands(customerCmd, "CUSTOMER", "客户")
 	customerCmd.AddCommand(partner.NewInvoiceGroup())
-	customerCmd.AddCommand(partner.NewSettlementGroup())
+	customerCmd.AddCommand(partner.NewSettlementGroup("CUSTOMER"))
 	customerCmd.AddCommand(partner.NewCreditGroup())
 }
 

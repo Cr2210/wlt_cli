@@ -25,11 +25,7 @@ func NewStatsGetCmd(name, apiPath, label string, extraFlags []FlagSpec) *cobra.C
 			for _, f := range extraFlags {
 				CollectStringFlag(cmd, params, f.Name)
 			}
-			suffix := name
-			if apiPath == "/erp/homepage" {
-				suffix = "dashboard6"
-			}
-			resp, err := GetClient().Get(context.Background(), apiPath+"/"+suffix, params)
+			resp, err := GetClient().Get(context.Background(), apiPath+"/"+name, params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("%s失败: %s", label, err), "")
 			}

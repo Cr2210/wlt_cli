@@ -43,7 +43,7 @@ cli_version: ">=0.1.0"
 | `contract` | 合同管理：长期合同 / 供货合同 / 服务合同 / 运输合同 | [contract.md](./references/contract.md) |
 | `sale` | 销售管理：销售出库 / 销售退货 | [sale-purchase.md](./references/sale-purchase.md) |
 | `purchase` | 采购管理：采购入库 / 采购退货 | [sale-purchase.md](./references/sale-purchase.md) |
-| `finance` | 财务管理：账户 / 付款 / 收款 / 退款 / 结算 / 核销 / 开票申请 / 收付款 / 账户结算 | [finance.md](./references/finance.md) |
+| `finance` | 财务管理：账户 / 付款 / 收款 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 收付款 / 账户结算 | [finance.md](./references/finance.md) |
 | `order` | 订单管理：主订单 / 排产计划订单 | [order.md](./references/order.md) |
 | `produce` | 生产管理：生产单 / 生产计划 | [produce.md](./references/produce.md) |
 | `waybill` | 运单管理：运单全生命周期 / 推送配置 | [waybill.md](./references/waybill.md) |
@@ -68,6 +68,32 @@ cli_version: ">=0.1.0"
 3. **参考文件加载**：按模块总览读取对应 `references/*.md`，按其中命令参考执行
 4. **通用 API 兜底**：当快捷命令不覆盖所需操作时，使用 `wlt api` 兜底
 5. **追问**：以上步骤都无法判断时，主动追问用户澄清
+
+## 鉴权样例（无状态，每条业务命令必带 `--token`/`--tenant-id`）
+
+> 以下为完整可执行样例。token 已脱敏，替换为真实 accessToken 即可；`--tenant-id 999` 为示例租户。所有业务命令只需固定带上 `--token fee383b0****fc0 --tenant-id 999` 这一段。
+
+```bash
+# 1. 分页列表查询
+wlt customer list --token fee383b0****fc0 --tenant-id 999 --page-no 1 --page-size 10
+
+# 2. 精简列表（下拉/选择控件用，返回 id+name）
+wlt product simple-list --token fee383b0****fc0 --tenant-id 999
+wlt stock warehouse simple-list --token fee383b0****fc0 --tenant-id 999
+
+# 3. 详情查询（id 必须从上一步 list/simple-list 结果中提取，不要编造）
+wlt customer get --token fee383b0****fc0 --tenant-id 999 --id <客户ID>
+
+# 4. 新增（--data 为 JSON 对象，完整必填字段见 references/partner.md）
+wlt customer create --token fee383b0****fc0 --tenant-id 999 --data '{"name":"测试客户","category":"ENTERPRISE",...}'
+
+# 5. 切换环境 / 临时覆盖后端地址
+wlt customer list --token fee383b0****fc0 --tenant-id 999 --profile prod
+wlt customer list --token fee383b0****fc0 --tenant-id 999 --base-url https://erpapi.w-lian.com
+
+# 6. 调试：只预览请求、不发送（仍需带 token/tenant-id，header 中 token 显示为 dry-run-token）
+wlt api GET /erp/customer/page --token fee383b0****fc0 --tenant-id 999 --params '{"pageNo":1,"pageSize":10}' --dry-run
+```
 
 ## 意图判断决策树
 
@@ -152,7 +178,7 @@ wlt profit-event retry --id <ID>             # 重试事件
 wlt profit-calculation batch-recalculate-all # 批量重算（写操作，谨慎）
 ```
 
-> 实测：profit-event 的 list/statistics/types 在 SIT 返回后端 404 异常。
+> 路径已修正为 `/erp/profit/event/*`（原 `/erp/profit-event/*` 返回 404）。待有效 token 复测。
 
 ### 定时任务 job-trigger
 
@@ -268,6 +294,8 @@ Step 3 → 执行命令
 ## 实测可用性速查（SIT 环境，v0.1.7）
 
 > v0.1.7 在 SIT 实测结论。✅ 可用；⚠️ 需必填参数；❌ 当前后端/权限问题（非 wlt 缺陷，改用 `wlt api` 兜底或联系管理员）。
+>
+> **本轮（2026-06-27）变更**：修复 `profit-event` / `stock-report` / `homepage` / `job-trigger` 路径 bug；修复 filter flag 的 kebab→camelCase 参数名（此前 `--supplier-id` 等多词筛选不生效）；新增 finance invoice/payment-apply/prepayment-apply 查询、report direct、stock 与 stock-record 多个查询/统计端点、legacy 单据域 page-count。标 🛠 项为路径已对齐文档、待有效 token 实测。
 
 ### ✅ 完全可用
 - **库存 stock**：warehouse / query(list·count·get) / record(list) / in / out / move / check
@@ -289,9 +317,18 @@ Step 3 → 执行命令
 - `quality inspection relate-list --business-type <类型> --business-id <ID>`
 
 ### ❌ 当前不可用（后端异常或权限）
-- **后端 404/500**：`waybill source list/page-count`、`report stock buy-send/finance/produce/warehouse`、`system role list`、`system dict type-list/data-list`、`profit-event list/statistics/types`、`stock record count`、`quality weight waybill-page/waybill-summary`、`operate-log list`
+- **后端 404/500**：`waybill source list/page-count`、`system role list`、`system dict type-list/data-list`、`stock record count`、`quality weight waybill-page/waybill-summary`、`operate-log list`
 - **权限 403**：`sale return list`、`purchase return list`、`system menu list`、`data-sync list`
 - **命令未注册**：`supplier credit *`（客户有 credit，供应商未实现；`supplier --help` 误列）
+
+### 🛠 本轮新增/修复（路径已对齐文档，待有效 token 实测）
+- **路径修复**：`profit-event *`（→`/erp/profit/event/*`）、`report stock warehouse/buy-send/finance/produce`（→对应 `*-page` 分页端点）、`job-trigger *`（→`/erp/job-trigger/*`）、`homepage dashboard2/inventory-backlog/product-ranking`（不再被强制到 dashboard6）
+- **筛选修复**：多词 filter flag 现正确转 camelCase（`--supplier-id`→`supplierId`），此前此类筛选条件不生效
+- **新增查询**：
+  - 财务：`finance invoice / payment-apply / prepayment-apply`（list·get·summary）
+  - 报表：`report direct detail / detail-count`、`report stock *-count`、`report purchase/sale *-count`
+  - 库存：`stock query page-count / detail-count / stock-record-count`、`stock record page-count / record-page / total-cost`
+  - 单据域：stock in/out/move/check、purchase in/return、sale out/return 现均含 `page-count`
 
 ## 详细参考（按需读取）
 

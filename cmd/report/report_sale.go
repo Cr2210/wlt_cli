@@ -2,6 +2,7 @@ package report
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -27,8 +28,11 @@ func init() {
 	}
 	saleReportCmd.AddCommand(
 		newSaleReportDetailCmd(),
+		newSaleReportDetailCountCmd(),
 		newSaleReportSummerCmd(),
+		newSaleReportSummerCountCmd(),
 		newSaleReportProfitCmd(),
+		newSaleReportProfitCountCmd(),
 	)
 	reportCmd.AddCommand(saleReportCmd)
 }
@@ -120,6 +124,81 @@ func newSaleReportProfitCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
+	for _, f := range saleReportFilters {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+	return c
+}
+
+func newSaleReportDetailCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "detail-count",
+		Short: "销售报表明细统计",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			for _, f := range saleReportFilters {
+				cmdutil.CollectStringFlag(cmd, params, f.Name)
+			}
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/sale-report/detail-page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计销售报表明细失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	for _, f := range saleReportFilters {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+	return c
+}
+
+func newSaleReportSummerCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "summer-count",
+		Short: "销售报表汇总统计",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			for _, f := range saleReportFilters {
+				cmdutil.CollectStringFlag(cmd, params, f.Name)
+			}
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/sale-report/summer-page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计销售报表汇总失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	for _, f := range saleReportFilters {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+	return c
+}
+
+func newSaleReportProfitCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "profit-count",
+		Short: "销售报表利润统计",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			for _, f := range saleReportFilters {
+				cmdutil.CollectStringFlag(cmd, params, f.Name)
+			}
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/sale-report/profit-page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计销售报表利润失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
 	for _, f := range saleReportFilters {
 		c.Flags().String(f.Name, "", f.Usage)
 	}

@@ -21,12 +21,37 @@ func NewCRUDSubCmd(name, apiPath, label string) *cobra.Command {
 	cmd.AddCommand(
 		newLegacyListCmd(name, apiPath, label),
 		newLegacyGetCmd(name, apiPath, label),
+		newLegacyPageCountCmd(name, apiPath, label),
 		newLegacyCreateCmd(name, apiPath, label),
 		newLegacyUpdateCmd(name, apiPath, label),
 		newLegacyDeleteCmd(name, apiPath, label),
 		newLegacyUpdateStatusCmd(name, apiPath, label),
 	)
 	return cmd
+}
+
+// newLegacyPageCountCmd builds a page-count command mirroring the legacy list
+// filters (warehouse-id/product-id/no/status/start-time/end-time/type).
+func newLegacyPageCountCmd(name, apiPath, label string) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "page-count",
+		Short: fmt.Sprintf("统计%s数量", label),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			CollectStringFlags(cmd, params, "warehouse-id", "product-id", "no", "status",
+				"start-time", "end-time", "type")
+			resp, err := GetClient().Get(context.Background(), apiPath+"/page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计%s失败: %s", label, err), "")
+			}
+			return OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	AddLegacyOptionalFlags(c)
+	return c
 }
 
 func newLegacyListCmd(name, apiPath, label string) *cobra.Command {

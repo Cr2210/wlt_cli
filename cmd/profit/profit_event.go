@@ -46,7 +46,7 @@ func newProfitEventPageCmd() *cobra.Command {
 			}
 			cmdutil.CollectStringFlags(cmd, params, "event-type", "status")
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit-event/page", params)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit/event/page", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("查询利润事件失败: %s", err), "")
 			}
@@ -70,7 +70,7 @@ func newProfitEventStatisticsCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit-event/statistics", nil)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit/event/statistics", nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("获取利润事件统计失败: %s", err), "")
 			}
@@ -90,7 +90,7 @@ func newProfitEventTypesCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit-event/types", nil)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit/event/types", nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("获取利润事件类型失败: %s", err), "")
 			}
@@ -112,7 +112,7 @@ func newProfitEventRetryCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Post(context.Background(), fmt.Sprintf("/erp/profit-event/retry/%d", eventId), nil)
+			resp, err := cmdutil.GetClient().Post(context.Background(), fmt.Sprintf("/erp/profit/event/retry/%d", eventId), nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("重试利润事件失败: %s", err), "")
 			}
@@ -134,7 +134,7 @@ func newProfitEventCleanExpiredCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/profit-event/clean-expired", nil)
+			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/profit/event/clean-expired", nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("清理过期事件失败: %s", err), "")
 			}
@@ -154,7 +154,7 @@ func newProfitEventHealthCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit-event/health", nil)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/profit/event/health", nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("健康检查失败: %s", err), "")
 			}

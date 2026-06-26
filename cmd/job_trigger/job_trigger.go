@@ -34,7 +34,7 @@ func newJobTriggerExecuteProductCostRecordCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-job/execute-product-cost-record", nil)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/job-trigger/execute-product-cost-record", nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("执行产品成本记录失败: %s", err), "")
 			}
@@ -54,7 +54,7 @@ func newJobTriggerExecuteReceivableBalanceCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-job/execute-receivable-balance", nil)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/job-trigger/execute-receivable-balance", nil)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("执行应收余额计算失败: %s", err), "")
 			}

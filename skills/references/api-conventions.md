@@ -21,15 +21,15 @@
 - `code: 0` 表示成功
 - 非 0 表示业务错误，`msg` 中包含错误描述
 
-### 认证
+### 认证（无状态）
 
-- 请求头：`Authorization: Bearer {token}`
-- Token 自动管理（过期前 60s 自动刷新）
+- 请求头：`Authorization: Bearer {token}` —— 由 `--token <accessToken>` 提供，CLI 自动加 `Bearer ` 前缀
+- CLI 不保存登录态、不自动刷新；token 过期需调用方重新获取并通过 `--token` 传入
 
 ### 多租户
 
-- 请求头：`tenant-id`, `enterprise-type`, `visit-tenant-id`
-- CLI 自动注入，用户无需手动设置
+- 请求头：`tenant-id`（由 `--tenant-id` 提供，**必填**）、`enterprise-type`（来自 profile，可选）
+- `tenant-id` 不再从配置文件读取，每次调用由 flag 提供
 
 ### 分页
 
@@ -101,4 +101,8 @@ wlt api GET /erp/custom-endpoint --dry-run
 
 - **stdout**: JSON 数据（成功时）
 - **stderr**: JSON 错误（失败时），格式：`{ "type": "...", "message": "...", "hint": "..." }`
-- **退出码**: 0=成功, 1=通用, 2=配置, 3=认证, 4=参数, 5=API, 6=网络
+- **退出码**:
+  - `0` 成功 / `1` 通用错误 / `2` 配置错误 / `6` 网络错误
+  - `4` 参数错误 —— **缺少 `--token`/`--tenant-id` 也归此类**
+  - `5` API 错误 —— 服务端 token 失效(`code:401 账号未登录`)当前也表现为 `5`,需重新获取 token 并通过 `--token` 传入
+  - `3` 鉴权(保留常量,当前未使用;统一错误分类为后续优化)

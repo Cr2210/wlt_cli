@@ -15,8 +15,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/weiliantong/cli/internal/apierr"
-	"github.com/weiliantong/cli/internal/auth"
-	"github.com/weiliantong/cli/internal/config"
 )
 
 // Response wraps the parsed API response data.
@@ -24,18 +22,28 @@ type Response struct {
 	Data json.RawMessage // the "data" field from CommonResult
 }
 
+// RequestContext carries everything needed to build an authenticated request.
+// It is resolved once per process from the active profile plus per-call flags
+// (see internal/cmdutil). The client holds no other auth state — auth is
+// stateless: every request carries the token supplied on the command line.
+type RequestContext struct {
+	BaseURL        string
+	APIPrefix      string
+	TenantID       string
+	EnterpriseType string
+	Token          string // raw access token; sent as "Authorization: Bearer <token>"
+}
+
 // Client is the HTTP client for calling backend APIs.
 type Client struct {
-	profile    *config.Profile
-	authMgr    *auth.Manager
+	ctx        RequestContext
 	httpClient *http.Client
 }
 
-// NewClient creates a new API client.
-func NewClient(profile *config.Profile, authMgr *auth.Manager) *Client {
+// NewClient creates a new API client from a resolved RequestContext.
+func NewClient(ctx RequestContext) *Client {
 	return &Client{
-		profile: profile,
-		authMgr: authMgr,
+		ctx: ctx,
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -95,7 +103,7 @@ func (c *Client) DoRaw(ctx context.Context, method, path string, params map[stri
 
 // BuildDryRun returns the request details without sending.
 func (c *Client) BuildDryRun(method, path string, params map[string]any, body any) (string, string, http.Header, []byte, error) {
-	fullURL := c.profile.BaseURL + c.profile.APIPrefix + path
+	fullURL := c.ctx.BaseURL + c.ctx.APIPrefix + path
 	if len(params) > 0 {
 		v := url.Values{}
 		for k, val := range params {
@@ -107,6 +115,7 @@ func (c *Client) BuildDryRun(method, path string, params map[string]any, body an
 	if body != nil {
 		bodyBytes, _ = json.Marshal(body)
 	}
+	// Mask the token in dry-run output to avoid echoing secrets to stdout.
 	headers := c.buildHeaders("dry-run-token")
 	return method, fullURL, headers, bodyBytes, nil
 }
@@ -152,7 +161,7 @@ func (c *Client) do(ctx context.Context, method, path string, params map[string]
 }
 
 func (c *Client) buildRequest(ctx context.Context, method, path string, params map[string]any, body any) (*http.Request, error) {
-	fullURL := c.profile.BaseURL + c.profile.APIPrefix + path
+	fullURL := c.ctx.BaseURL + c.ctx.APIPrefix + path
 	if len(params) > 0 {
 		v := url.Values{}
 		for k, val := range params {
@@ -175,22 +184,18 @@ func (c *Client) buildRequest(ctx context.Context, method, path string, params m
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
-	// Get valid token (refreshes if needed)
-	token, err := c.authMgr.GetValidToken(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get token: %w", err)
-	}
-	req.Header = c.buildHeaders(token)
+	// Stateless auth: use the token supplied on the command line.
+	req.Header = c.buildHeaders(c.ctx.Token)
 	return req, nil
 }
 
 func (c *Client) buildHeaders(token string) http.Header {
 	h := http.Header{}
 	h.Set("Authorization", "Bearer "+token)
-	h.Set("tenant-id", c.profile.TenantID)
+	h.Set("tenant-id", c.ctx.TenantID)
 	h.Set("Content-Type", "application/json")
-	if c.profile.EnterpriseType != "" {
-		h.Set("enterprise-type", c.profile.EnterpriseType)
+	if c.ctx.EnterpriseType != "" {
+		h.Set("enterprise-type", c.ctx.EnterpriseType)
 	}
 	return h
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/weiliantong/cli/cmd/auth"
 	configcmd "github.com/weiliantong/cli/cmd/config"
 	"github.com/weiliantong/cli/cmd/contract"
 	"github.com/weiliantong/cli/cmd/customer"
@@ -51,6 +50,13 @@ var rootCmd = &cobra.Command{
 			return output.NewExitError(2, fmt.Sprintf("加载配置失败: %s", err), "运行 wlt config init 初始化配置")
 		}
 		cmdutil.InitManagers(cfgMgr)
+		// Stateless auth: token + tenant-id (and optional base-url override)
+		// are supplied per-call via flags. Validated lazily in EnsureClient so
+		// commands that don't hit the API (version/config/...) stay usable.
+		token, _ := cmd.Flags().GetString("token")
+		tenantID, _ := cmd.Flags().GetString("tenant-id")
+		baseURL, _ := cmd.Flags().GetString("base-url")
+		cmdutil.SetAuthFlags(token, tenantID, baseURL)
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -79,11 +85,14 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().String("profile", "sit", "配置环境")
+	rootCmd.PersistentFlags().String("profile", "sit", "配置环境(sit/prod),提供 base_url/api_prefix")
 	rootCmd.PersistentFlags().Bool("quiet", false, "静默模式")
+	// 无状态鉴权:每次调用由调用方传入
+	rootCmd.PersistentFlags().String("token", "", "访问令牌(对应 Authorization: Bearer 头,必填)")
+	rootCmd.PersistentFlags().String("tenant-id", "", "租户 ID(对应 tenant-id 头,必填)")
+	rootCmd.PersistentFlags().String("base-url", "", "可选,覆盖 profile 的 base_url")
 
 	// 基础设施
-	auth.Register(rootCmd)
 	configcmd.Register(rootCmd)
 	system.Register(rootCmd)
 

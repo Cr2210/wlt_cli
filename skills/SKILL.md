@@ -8,7 +8,7 @@ cli_version: ">=0.1.0"
 
 通过 `wlt` 命令管理维链通 ERP 系统全部能力。
 
-> ⚠️ **命令可用性取决于环境配置**。本文档基于 wlt v0.1.7 实测编写（已修复 customer/supplier/contract/quality-weight/stock 等模块的类型参数与解析 bug），所有命令均需先完成 `wlt auth login` 认证。使用 `--profile sit` 连接 SIT 环境，`--profile prod` 连接生产环境。验证命令结构用 `wlt <cmd> --help`；验证请求用 `wlt api GET <path> --dry-run`（注意：仅 `wlt api` 支持 `--dry-run`，业务子命令不支持）。各端点实测可用性见文末「实测可用性速查」。
+> ⚠️ **命令可用性取决于环境配置**。本文档基于 wlt v0.1.7 实测编写（已修复 customer/supplier/contract/quality-weight/stock 等模块的类型参数与解析 bug）。**鉴权为无状态模式**：CLI 不再保存登录态，每条业务命令都必须通过 `--token <accessToken>` 与 `--tenant-id <租户ID>` 传入鉴权信息（从用户/会话获取），缺失会以退出码 4 报错。使用 `--profile sit` 连接 SIT 环境，`--profile prod` 连接生产环境（profile 只提供 `base_url`/`api_prefix`）。验证命令结构用 `wlt <cmd> --help`；验证请求用 `wlt api GET <path> --dry-run`（注意：仅 `wlt api` 支持 `--dry-run`，业务子命令不支持）。各端点实测可用性见文末「实测可用性速查」。
 
 ## 严格禁止 (NEVER DO)
 
@@ -16,7 +16,7 @@ cli_version: ">=0.1.0"
 - 不要编造 ID、单号等标识符，必须从命令返回中提取
 - 不要猜测字段名/参数值，操作前必须先查询确认
 - 禁止编造命令路径、子命令或 flag；不确定时必须先运行对应层级的 `wlt --help` 查证
-- 不要在未确认认证状态的情况下执行业务命令
+- 不要在未携带 `--token` 与 `--tenant-id` 的情况下执行业务命令（会直接报退出码 4）
 - 不要对生产环境 (`--profile prod`) 执行删除操作而未获用户明确确认
 
 ## 严格要求 (MUST DO)
@@ -27,7 +27,8 @@ cli_version: ">=0.1.0"
 - 删除操作接受多个 ID（逗号分隔），确认时必须展示影响范围
 - 状态更新需遵循业务流转规则（如：未审核→已审核→已拒绝）
 - 分页查询默认 `--page-no=1`, `--page-size=20`（flag 用连字符短横线，不是下划线；后端字段为驼峰 `pageNo`/`pageSize`），大数据量需分页遍历
-- 使用 `--profile` 切换环境，`--quiet` 静默模式
+- **每条业务命令必须携带 `--token <accessToken>` 与 `--tenant-id <租户ID>`**（无状态鉴权，从用户/会话获取；token 即后端登录返回的 accessToken，CLI 自动加 `Bearer ` 前缀）
+- 使用 `--profile sit|prod` 切换环境（提供 base_url/api_prefix），`--quiet` 静默模式，`--base-url` 可选覆盖后端地址
 
 ## 模块总览
 
@@ -35,7 +36,7 @@ cli_version: ">=0.1.0"
 
 | 模块 | 用途 | 参考文件 |
 |------|------|----------|
-| `auth` / `config` | 认证登录 / 配置管理 | [auth-config.md](./references/auth-config.md) |
+| `config` | 配置管理（profile / base_url / api_prefix） | [auth-config.md](./references/auth-config.md) |
 | `stock` | 库存管理：仓库 / 库存查询 / 入库 / 出库 / 调拨 / 盘点 / 库存明细 | [stock.md](./references/stock.md) |
 | `product` | 产品管理：产品 CRUD / 单位 / 计量 / 分类 / 指标 | [product.md](./references/product.md) |
 | `customer` / `supplier` | 客户供应商：CRUD / 发票 / 结算 / 信用额度 | [partner.md](./references/partner.md) |
@@ -62,7 +63,7 @@ cli_version: ">=0.1.0"
 
 ## 核心流程（每次请求必须执行）
 
-1. **认证预检**：首次使用或遇到认证错误时，必须先检查 `wlt auth status`，确认 `status` 为 `logged_in`，否则执行 `wlt auth login`
+1. **鉴权参数**：每条业务命令都必须携带 `--token <accessToken>` 与 `--tenant-id <租户ID>`（无状态鉴权，从用户/会话获取；`wlt version`/`config`/`completion`/`help` 除外）。若返回退出码 4 提示「缺少必填鉴权参数」，即未携带这两个 flag
 2. **意图识别**：判断用户请求属于哪个模块（见「意图判断决策树」）
 3. **参考文件加载**：按模块总览读取对应 `references/*.md`，按其中命令参考执行
 4. **通用 API 兜底**：当快捷命令不覆盖所需操作时，使用 `wlt api` 兜底
@@ -164,10 +165,11 @@ wlt job-trigger execute-receivable-balance   # 执行应收余额计算
 
 ## 常见工作流
 
+> 以下示例为简洁起见**省略了 `--token` 与 `--tenant-id`**。实际执行时，**每条**业务命令都必须携带这两个 flag（例如 `wlt stock warehouse simple-list --token <accessToken> --tenant-id <租户ID>`），否则会以退出码 4 报「缺少必填鉴权参数」。
+
 ### 1. 入库全流程
 
 ```bash
-wlt auth status                                    # 确认认证
 wlt stock warehouse simple-list                    # 获取仓库列表
 wlt product simple-list                            # 获取产品列表
 wlt stock in create --data '{"warehouseId":1,...}' # 创建入库单
@@ -250,19 +252,18 @@ Step 3 → 执行命令
 | 0 | — | 成功 | — |
 | 1 | `general` | 通用错误 | 检查错误信息 |
 | 2 | `config` | 配置错误 | 运行 `wlt config init` |
-| 3 | `authentication` | 认证错误 | 运行 `wlt auth login` |
-| 4 | `validation` | 参数错误 | 检查命令参数 |
-| 5 | `api_error` | API 错误 | 用 `wlt api GET <path> --dry-run` 调试（仅 `wlt api` 支持 `--dry-run`） |
-| 6 | `network` | 网络错误 | 检查网络连接 |
+| 3 | `authentication` | 鉴权错误（保留） | 当前服务端 token 拒绝统一表现为退出码 5（见下） |
+| 4 | `validation` | 参数错误 | 检查命令参数；**缺少 `--token`/`--tenant-id` 也归此类**，补齐后重试 |
+| 5 | `api_error` | API 错误 | 用 `wlt api GET <path> --dry-run` 调试；若 message 含 `code=401`/`账号未登录`，说明 token 失效，需重新获取并通过 `--token` 传入 |
+| 6 | `network` | 网络错误 | 检查网络连接与 `--base-url`/profile 的 base_url |
 
 ### 错误处理流程
 
-1. 遇到认证错误（退出码 3），执行 `wlt auth login` 重新登录
-2. 遇到参数错误（退出码 4），使用 `--help` 查看命令参数说明
-3. 遇到 API 错误（退出码 5），使用 `wlt api GET <path> --dry-run` 检查请求
-4. 遇到网络错误（退出码 6），检查网络和配置中的 BaseURL
-5. **严禁**连续重试超过 3 次相同命令；3 次仍失败必须停止并报告
-6. 仍然失败，**立即停止**并报告完整错误信息
+1. 遇到参数错误（退出码 4），先确认是否漏带 `--token`/`--tenant-id`，再使用 `--help` 查看命令参数说明
+2. 遇到 API 错误（退出码 5），若 message 含 `code=401`/`账号未登录`，重新获取 token 并通过 `--token` 传入；否则用 `wlt api GET <path> --dry-run` 检查请求
+3. 遇到网络错误（退出码 6），检查网络和 `--base-url`/profile 的 base_url
+4. **严禁**连续重试超过 3 次相同命令；3 次仍失败必须停止并报告
+5. 仍然失败，**立即停止**并报告完整错误信息
 
 ## 实测可用性速查（SIT 环境，v0.1.7）
 

@@ -48,7 +48,7 @@ func TestWritePagedJSON(t *testing.T) {
 
 func TestWriteError(t *testing.T) {
 	var buf bytes.Buffer
-	exitErr := NewExitError(3, "token expired", "run wlt auth login")
+	exitErr := NewExitError(3, "token expired", "请通过 --token 与 --tenant-id 传入有效鉴权信息")
 	err := WriteError(&buf, exitErr)
 	if err != nil {
 		t.Fatal(err)

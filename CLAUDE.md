@@ -27,7 +27,6 @@ cmd/                    # Cobra 命令层，每个业务域一个独立 Go 包
 ├── version.go          # wlt version
 ├── completion.go       # Shell 自动补全
 ├── help.go             # 中文帮助
-├── auth/               # 认证命令（login/logout/status）
 ├── config/             # 配置命令（init/show/set）
 ├── system/             # 系统管理（user/dept/role/menu/dict）
 ├── stock/              # 库存管理（warehouse/query/in/out/move/check/record）
@@ -56,11 +55,10 @@ cmd/                    # Cobra 命令层，每个业务域一个独立 Go 包
 └── screen/             # 大屏数据管理
 internal/
 ├── apierr/             # 结构化错误类型
-├── auth/               # 认证逻辑（使用原生 net/http，不依赖 client）
 ├── build/              # 版本信息（ldflags 注入）
-├── client/             # HTTP 客户端（认证头 + 多租户 + 重试 + CommonResult 解析）
+├── client/             # HTTP 客户端（认证头 + 多租户 + 重试 + CommonResult 解析，无状态）
 ├── cmdutil/            # 命令共享工具
-│   ├── client.go       #   EnsureClient(), InitManagers(), GetClient()
+│   ├── client.go       #   EnsureClient(), InitManagers(), GetClient(), SetAuthFlags()
 │   ├── helpers.go      #   ParseJSONData, CollectStringFlag/Flags, CollectIntFlags
 │   ├── output.go       #   OutputJSON, OutputPagedJSON, OutputRaw, ParsePagedJSON
 │   ├── crud.go         #   CRUDConfig, NewCRUDGroup, AddCRUDToParent + 工厂函数
@@ -74,7 +72,7 @@ skills/                 # AI Agent Skills Markdown
 ## 架构约定
 
 - **按功能分包**：每个业务域是独立的 Go 包（`cmd/<domain>/`），暴露 `Register(parent *cobra.Command)` 函数
-- **包依赖无循环**：auth 使用原生 net/http，不依赖 client 包
+- **无状态鉴权**：CLI 不保存登录态、无 `auth` 命令；每条业务命令通过全局 flag `--token`/`--tenant-id` 传入鉴权，`cmdutil.EnsureClient()` 从 profile（base_url/api_prefix）+ flag 组装 `client.RequestContext` 并校验必填
 - **命令注册**：子命令在各自文件中通过 `init()` 注册到父命令变量，`root.go` 调用每个包的 `Register()`
 - **输出协议**：stdout 数据 JSON / stderr 错误 JSON / 退出码 0-6
 - **CRUD 模式**：
@@ -84,10 +82,10 @@ skills/                 # AI Agent Skills Markdown
 
 ## 后端 API 约定
 
-- 基础路径：`{base_url}{api_prefix}`（如 `https://erpsit.api.w-lian.com/admin-api`）
+- 基础路径：`{base_url}{api_prefix}`（如 `https://erpsit.api.w-lian.com/admin-api`），由 `--profile` 提供，可用 `--base-url` 覆盖
 - 统一响应：`CommonResult<T>` — `{ "code": 0, "data": T, "msg": "" }`
-- 认证头：`Authorization: Bearer {token}`
-- 多租户头：`tenant-id`, `visit-tenant-id`
+- 认证头：`Authorization: Bearer {token}` —— 由必填 flag `--token <accessToken>` 提供（CLI 自动加 `Bearer ` 前缀）
+- 多租户头：`tenant-id`（由必填 flag `--tenant-id` 提供）、`enterprise-type`（来自 profile，可选）
 - 分页：`GET /page?pageNo=1&pageSize=20` → `{ "list": [...], "total": N }`
 - 删除：`DELETE /delete?ids=1,2,3`
 

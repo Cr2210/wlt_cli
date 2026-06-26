@@ -27,10 +27,10 @@ var configSetCmd = &cobra.Command{
 
 		// Validate field name before attempting update
 		switch field {
-		case "base_url", "api_prefix", "tenant_id", "enterprise_type":
+		case "base_url", "api_prefix", "enterprise_type":
 			// valid
 		default:
-			return output.NewExitError(4, fmt.Sprintf("未知配置项: %s", field), "支持: base_url, api_prefix, tenant_id, enterprise_type")
+			return output.NewExitError(4, fmt.Sprintf("未知配置项: %s", field), "支持: base_url, api_prefix, enterprise_type")
 		}
 
 		if err := cmdutil.CfgMgr.UpdateProfileField(profileName, field, value); err != nil {

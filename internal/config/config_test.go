@@ -42,8 +42,7 @@ func TestSaveAndReload(t *testing.T) {
 	}
 	// Modify and save
 	p, _ := m.ActiveProfile()
-	p.AccessToken = "test-token"
-	p.ExpiresTime = 999999
+	p.EnterpriseType = "test-enterprise"
 	if err := m.Save(); err != nil {
 		t.Fatal(err)
 	}
@@ -56,11 +55,8 @@ func TestSaveAndReload(t *testing.T) {
 		t.Fatal(err)
 	}
 	loaded, _ := m2.ActiveProfile()
-	if loaded.AccessToken != "test-token" {
-		t.Errorf("expected token=test-token, got %s", loaded.AccessToken)
-	}
-	if loaded.ExpiresTime != 999999 {
-		t.Errorf("expected expires=999999, got %d", loaded.ExpiresTime)
+	if loaded.EnterpriseType != "test-enterprise" {
+		t.Errorf("expected enterprise_type=test-enterprise, got %s", loaded.EnterpriseType)
 	}
 }
 

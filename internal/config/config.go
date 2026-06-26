@@ -17,14 +17,13 @@ type Config struct {
 }
 
 // Profile represents a single environment profile.
+// It holds connection info only (where to reach the backend).
+// Authentication (token) and tenant identity (tenant-id) are supplied
+// per-call via flags — see internal/cmdutil. Nothing secret is stored here.
 type Profile struct {
 	BaseURL        string `yaml:"base_url"`
 	APIPrefix      string `yaml:"api_prefix"`
-	TenantID       string `yaml:"tenant_id"`
 	EnterpriseType string `yaml:"enterprise_type"`
-	AccessToken    string `yaml:"access_token"`
-	RefreshToken   string `yaml:"refresh_token"`
-	ExpiresTime    int64  `yaml:"expires_time"`
 }
 
 // Manager manages configuration loading and saving.
@@ -153,8 +152,6 @@ func (m *Manager) UpdateProfileField(profileName, field, value string) error {
 		p.BaseURL = value
 	case "api_prefix":
 		p.APIPrefix = value
-	case "tenant_id":
-		p.TenantID = value
 	case "enterprise_type":
 		p.EnterpriseType = value
 	default:
@@ -188,12 +185,10 @@ func defaultConfig() *Config {
 			"sit": {
 				BaseURL:   "https://erpsit.api.w-lian.com",
 				APIPrefix: "/admin-api",
-				TenantID:  "1",
 			},
 			"prod": {
 				BaseURL:   "https://erpapi.w-lian.com",
 				APIPrefix: "/admin-api",
-				TenantID:  "1",
 			},
 		},
 	}

@@ -21,10 +21,7 @@ var configShowCmd = &cobra.Command{
 			profiles[name] = map[string]any{
 				"base_url":        p.BaseURL,
 				"api_prefix":      p.APIPrefix,
-				"tenant_id":       p.TenantID,
 				"enterprise_type": p.EnterpriseType,
-				"has_token":       p.AccessToken != "",
-				"expires_time":    p.ExpiresTime,
 			}
 		}
 		return cmdutil.OutputJSON(result)

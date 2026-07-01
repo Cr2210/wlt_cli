@@ -40,7 +40,7 @@ cli_version: ">=0.1.0"
 | `stock` | 库存管理：仓库 / 库存查询 / 入库 / 出库 / 调拨 / 盘点 / 库存明细 | [stock.md](./references/stock.md) |
 | `product` | 产品管理：产品 CRUD / 单位 / 计量 / 分类 / 指标 | [product.md](./references/product.md) |
 | `customer` / `supplier` | 客户供应商：CRUD / 发票 / 结算 / 信用额度 | [partner.md](./references/partner.md) |
-| `contract` | 合同管理：长期合同 / 供货合同 / 服务合同 / 运输合同 | [contract.md](./references/contract.md) |
+| `contract` | 合同管理：采购合同&长协 / 销售合同&长协 / 运输合同&长协 / 服务合同&长协 | [contract.md](./references/contract.md) |
 | `sale` | 销售管理：销售出库 / 销售退货 | [sale-purchase.md](./references/sale-purchase.md) |
 | `purchase` | 采购管理：采购入库 / 采购退货 | [sale-purchase.md](./references/sale-purchase.md) |
 | `finance` | 财务管理：账户 / 付款 / 收款 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 收付款 / 账户结算 | [finance.md](./references/finance.md) |
@@ -100,7 +100,7 @@ wlt api GET /erp/customer/page --token fee383b0****fc0 --tenant-id 999 --params 
 用户提到"库存/仓库/入库/出库/调拨/盘点/库存查询" → `stock`
 用户提到"产品/商品/计量/单位/产品分类/产品指标" → `product`
 用户提到"客户/供应商/合作伙伴/发票抬头/结算账户/信用额度" → `customer` / `supplier`
-用户提到"合同/长期合同/供货合同/服务合同/运输合同" → `contract`
+用户提到"合同/长协/采购长协/销售长协/运输长协/服务长协/销售合同/运输合同/服务合同" → `contract`
 用户提到"销售/卖出/销售出库/销售退货" → `sale`
 用户提到"采购/买入/采购入库/采购退货" → `purchase`
 用户提到"财务/账户/付款/收款/退款/核销/开票/转账/调账" → `finance`
@@ -254,7 +254,7 @@ wlt report stock detail --warehouse-id 1 --start-time 2024-01-01  # 库存报表
 | `stock` | `in/out/move/check delete` | 删除出入库调拨盘点单 |
 | `product` | `delete` | 删除产品 |
 | `customer/supplier` | `delete` / `delete-list` | 删除客户/供应商 |
-| `contract` | `delete` | 删除合同 |
+| `contract <子类>` | `delete` | 删除合同 |
 | `finance` | `account delete` / 所有 delete | 删除财务单据 |
 | `order` | `delete` / `cancel` | 删除/取消订单 |
 | `produce` | `delete` | 删除生产单 |
@@ -301,7 +301,7 @@ Step 3 → 执行命令
 - **库存 stock**：warehouse / query(list·count·get) / record(list) / in / out / move / check
 - **产品 product**：list / simple-list / category / unit / metrics / get-metrics / metrics item-list
 - **客户/供应商**：list / simple-list / page-count / credit（仅客户）/ invoice / settlement
-- **合同 contract**：list / page-count（长协·业务·运输自动按类型）/ provision
+- **合同 contract**：7 个子类（purchase-long-cooperate / sale-contract / sale-long-cooperate / transport / transport-long / service-contract / service-long），每个子类含 list / page-count / get / update-status / create / update / delete
 - **销售/采购**：sale out / purchase in
 - **财务 finance**：account / account-settlement / invoice-apply / payment / receipt / receipt-payment / refund / settlement / write-off（list·summary·get）
 - **订单/生产**：order main·plan / produce main(含 quality-page)·plan

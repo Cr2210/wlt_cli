@@ -1,51 +1,96 @@
 # 合同管理 (contract)
 
-## 长期合同 (`wlt contract`)
+## 总览
 
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt contract list` | 分页查询合同 | `--name`, `--status`, `--code`, `--partner-id`, `--page-no`, `--page-size` |
-| `wlt contract get --id <N>` | 获取合同详情 | `--id`（必填）, `--code` |
-| `wlt contract create --data '<json>'` | 创建合同 | `--data`（必填） |
-| `wlt contract update --data '<json>'` | 更新合同 | `--data`（必填） |
-| `wlt contract delete --ids <id1,id2>` | 删除合同 | `--ids`（必填，逗号分隔） |
-| `wlt contract update-status` | 更新合同状态 | `--id`（必填）, `--status`（必填） |
-| `wlt contract page-count` | 统计合同数量 | `--name`, `--status`, `--code`, `--partner-id` |
+合同模块覆盖 4 大类、7 个子类合同，统一通过 `type` 字段在 3 个后端端点之间区分：
 
-## 供货合同 (`wlt contract provision`)
+| 子命令 | 后端 type | HTTP 路径 |
+|---|---|---|
+| `purchase-long-cooperate` | `PURCHASE_LONG_COOPERATE` | `/erp/contract` |
+| `sale-contract` | `SALE_CONTRACT` | `/erp/service-contract` |
+| `sale-long-cooperate` | `SALE_LONG_COOPERATE` | `/erp/contract` |
+| `transport` | `TRANSPORT` | `/erp/transport-contract` |
+| `transport-long` | `TRANSPORT_LONG` | `/erp/contract` |
+| `service-contract` | `SERVICE` | `/erp/provision-contract` |
+| `service-long` | `SERVICE_LONG` | `/erp/provision-contract` |
 
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt contract provision list` | 分页查询 | `--name`, `--status`, `--no`, `--partner-id`, `--page-no`, `--page-size` |
-| `wlt contract provision get --id <N>` | 获取详情 | `--id`（必填）, `--no` |
-| `wlt contract provision create --data '<json>'` | 创建 | `--data`（必填） |
-| `wlt contract provision update --data '<json>'` | 更新 | `--data`（必填） |
-| `wlt contract provision delete --id <N>` | 删除 | `--id`（必填） |
-| `wlt contract provision update-status` | 更新状态 | `--id`（必填）, `--status`（必填） |
-| `wlt contract provision page-count` | 统计数量 | `--name`, `--status`, `--no`, `--partner-id` |
-| `wlt contract provision delete-batch` | 批量删除 | `--ids`（必填，逗号分隔） |
-| `wlt contract provision from-long` | 从长期合同生成 | `--long-contract-id`（必填） |
+每个子类合同的标准子命令（7 个）：`list` / `page-count` / `get` / `create` / `update` / `delete` / `update-status`。
 
-## 服务合同 (`wlt contract service`)
+## 共用的筛选与分页标志
 
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt contract service list` | 分页查询 | `--name`, `--status`, `--code`, `--partner-id`, `--page-no`, `--page-size` |
-| `wlt contract service get --id <N>` | 获取详情 | `--id`（必填）, `--code` |
-| `wlt contract service create --data '<json>'` | 创建 | `--data`（必填） |
-| `wlt contract service update --data '<json>'` | 更新 | `--data`（必填） |
-| `wlt contract service delete --ids <id1,id2>` | 删除 | `--ids`（必填，逗号分隔） |
-| `wlt contract service update-status` | 更新状态 | `--id`（必填）, `--status`（必填） |
-| `wlt contract service page-count` | 统计数量 | `--name`, `--status`, `--code`, `--partner-id` |
+所有 list / page-count 命令均支持以下筛选参数：
 
-## 运输合同 (`wlt contract transport`)
+| 标志 | 说明 |
+|---|---|
+| `--keyword` | 关键字搜索（合同编号等） |
+| `--enterprise-id` | 企业 ID |
+| `--order-start` | 下单日期起始（如 `2026-07-06 00:00:00`） |
+| `--order-end` | 下单日期结束（如 `2026-08-03 23:59:59`） |
+| `--end-start` | 合同到期起始（如 `2026-07-13 00:00:00`） |
+| `--end-end` | 合同到期结束（如 `2026-08-03 23:59:59`） |
+| `--page-no` | 页码（默认 1） |
+| `--page-size` | 每页数量（默认 20） |
 
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt contract transport list` | 分页查询 | `--name`, `--status`, `--code`, `--partner-id`, `--page-no`, `--page-size` |
-| `wlt contract transport get --id <N>` | 获取详情 | `--id`（必填） |
-| `wlt contract transport create --data '<json>'` | 创建 | `--data`（必填） |
-| `wlt contract transport update --data '<json>'` | 更新 | `--data`（必填） |
-| `wlt contract transport delete --ids <id1,id2>` | 删除 | `--ids`（必填，逗号分隔） |
-| `wlt contract transport update-status` | 更新状态 | `--id`（必填）, `--status`（必填） |
-| `wlt contract transport page-count` | 统计数量 | `--name`, `--status`, `--code`, `--partner-id` |
+后端会把 `order-start/order-end/end-start/end-end` 转成 `orderDate[0]/[1]` 与 `endTime[0]/[1]` 数组参数。
+
+## 采购长协
+
+```bash
+# 分页查询
+wlt contract purchase-long-cooperate list \
+  --keyword XY20260403000001 \
+  --enterprise-id 2001489305039032322 \
+  --order-start "2026-07-07 00:00:00" --order-end "2026-08-13 23:59:59" \
+  --end-start "2026-07-13 00:00:00" --end-end "2026-08-13 23:59:59" \
+  --page-no 1 --page-size 10
+
+# 统计数量
+wlt contract purchase-long-cooperate page-count --keyword XY20260403000001
+
+# CRUD
+wlt contract purchase-long-cooperate get --id <N>
+wlt contract purchase-long-cooperate create --data '<json>'
+wlt contract purchase-long-cooperate update --data '<json>'
+wlt contract purchase-long-cooperate delete --ids <id1,id2>
+wlt contract purchase-long-cooperate update-status --data '{"id":1,"status":2}'
+```
+
+## 销售合同 / 销售长协
+
+```bash
+# 销售合同
+wlt contract sale-contract list --keyword HT20260401000001 --order-start "..." --order-end "..."
+wlt contract sale-contract get --id <N>
+
+# 销售长协
+wlt contract sale-long-cooperate list --keyword XY20260401000001 --order-start "..." --order-end "..."
+wlt contract sale-long-cooperate page-count --keyword XY20260401000001
+wlt contract sale-long-cooperate create --data '<json>'
+wlt contract sale-long-cooperate delete --ids <id1,id2>
+wlt contract sale-long-cooperate update-status --data '{"id":1,"status":2}'
+```
+
+## 运输合同 / 运输长协
+
+```bash
+# 运输合同
+wlt contract transport list --keyword HT20260319000001 --order-start "..." --order-end "..."
+wlt contract transport get --id <N>
+wlt contract transport page-count --keyword HT20260319000001
+
+# 运输长协
+wlt contract transport-long list --keyword XY20260515000002 --order-start "..." --order-end "..."
+wlt contract transport-long page-count --keyword XY20260515000002
+```
+
+## 服务合同 / 服务长协
+
+```bash
+# 服务合同（后端端点同 /erp/provision-contract?type=SERVICE）
+wlt contract service-contract list --keyword HT20260402000001 --order-start "..." --order-end "..."
+wlt contract service-contract get --id <N>
+
+# 服务长协
+wlt contract service-long list --keyword XY20260409000001 --order-start "..." --order-end "..."
+wlt contract service-long page-count --keyword XY20260409000001
+```

@@ -825,6 +825,33 @@ func AddSettlementDateFlags(c *cobra.Command) {
 	}
 }
 
+// ---- 质检称重模块时间范围（orderTime[0] / orderTime[1]） ----
+
+// orderTimeFlags 是质检称重共用的订单时间范围筛选 flag；
+// 实际查询时会被转成 orderTime[0] / orderTime[1] 数组参数。
+// 对 SALE / PURCHASE 的订单称重与运单称重通用。
+var orderTimeFlags = []FlagSpec{
+	{Name: "start-time", Usage: "订单时间起始（如 2026-07-01 00:00:00）"},
+	{Name: "end-time", Usage: "订单时间结束（如 2026-07-31 23:59:59）"},
+}
+
+// CollectOrderTime 把 start-time/end-time 转成 orderTime[0]/orderTime[1] 数组参数。
+func CollectOrderTime(cmd *cobra.Command, params map[string]any) {
+	if v, _ := cmd.Flags().GetString("start-time"); v != "" {
+		params["orderTime[0]"] = v
+	}
+	if v, _ := cmd.Flags().GetString("end-time"); v != "" {
+		params["orderTime[1]"] = v
+	}
+}
+
+// AddOrderTimeFlags 把订单时间范围 flag 注册到命令上。
+func AddOrderTimeFlags(c *cobra.Command) {
+	for _, f := range orderTimeFlags {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+}
+
 // addSalePurchaseBaseFlags 注册采购/销售 list/page-count 共用的筛选 flag。
 // 保留 legacy 已有字段（含 start-time/end-time），并新增 product-name（产品名称模糊搜索）。
 func addSalePurchaseBaseFlags(c *cobra.Command) {

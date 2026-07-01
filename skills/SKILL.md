@@ -321,7 +321,7 @@ Step 3 → 执行命令
 - `quality inspection relate-list --business-type <类型> --business-id <ID>`
 
 ### ❌ 当前不可用（后端异常或权限）
-- **后端 404/500**：`waybill source list/page-count`、`system role list`、`system dict type-list/data-list`、`stock record count`、`quality weight waybill-page/waybill-summary`、`operate-log list`
+- **后端 404/500**：`waybill source list/page-count`、`system role list`、`system dict type-list/data-list`、`stock record count`、`operate-log list`
 - **权限 403**：`sale return list`、`purchase return list`、`system menu list`、`data-sync list`
 - **命令未注册**：`supplier credit *`（客户有 credit，供应商未实现；`supplier --help` 误列）
 

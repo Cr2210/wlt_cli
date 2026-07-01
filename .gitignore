@@ -19,3 +19,7 @@ config.yaml
 
 # npm
 node_modules/
+
+# 批量测试脚本
+*.ps1
+*.log

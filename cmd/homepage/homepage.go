@@ -19,18 +19,16 @@ var inventoryFlags = []cmdutil.FlagSpec{
 var homepageCmd = &cobra.Command{
 	Use:   "homepage",
 	Short: "首页数据总览",
-	Long:  "首页仪表盘数据：业务概览、库存分析、库存积压、产品排行。",
+	Long:  "首页仪表盘数据：基础统计、库存积压、产品排行。",
 }
 
 func init() {
 	// dashboard1 - 无参数
 	homepageCmd.AddCommand(newHomepageNoParamCmd("dashboard1", "首页仪表盘（基础统计）"))
 
-	// dashboard2 - 带时间范围
-	homepageCmd.AddCommand(cmdutil.NewStatsGetCmd("dashboard2", "/erp/homepage", "业务概览", nil))
-
-	// dashboard6 / inventory-backlog / product-ranking - 带库存筛选
-	homepageCmd.AddCommand(cmdutil.NewStatsGetCmd("dashboard6", "/erp/homepage", "库存分析", inventoryFlags))
+	// dashboard2 业务概览已迁至 wlt stats overview(2026-07 复核决定:避免重复注册、stats 业务语义更贴)
+	// dashboard6 库存分析已迁至 wlt stats stock(2026-07 复核决定:同上,避免 stats/homepage 重复)
+	// inventory-backlog / product-ranking - 带库存筛选
 	homepageCmd.AddCommand(cmdutil.NewStatsGetCmd("inventory-backlog", "/erp/homepage", "库存积压", inventoryFlags))
 	homepageCmd.AddCommand(cmdutil.NewStatsGetCmd("product-ranking", "/erp/homepage", "产品排行", inventoryFlags))
 }

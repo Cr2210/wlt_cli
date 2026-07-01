@@ -6,17 +6,21 @@ import (
 	"github.com/weiliantong/cli/internal/cmdutil"
 )
 
+var saleFlags = []cmdutil.FlagSpec{
+	{Name: "product-id", Usage: "产品 ID"},
+}
+
 func init() {
 	saleStats := &cobra.Command{
 		Use:   "sale",
 		Short: "销售分析",
 	}
 	saleStats.AddCommand(
-		cmdutil.NewStatsGetCmd("data-overview", "/erp/sale-statistics", "销售数据总览", nil),
-		cmdutil.NewStatsGetCmd("customer-rankings", "/erp/sale-statistics", "客户排行", nil),
-		cmdutil.NewStatsGetCmd("product-rankings", "/erp/sale-statistics", "产品排行", nil),
-		cmdutil.NewStatsGetCmd("employee-rankings", "/erp/sale-statistics", "员工排行", nil),
-		cmdutil.NewStatsGetCmd("region-rankings", "/erp/sale-statistics", "区域排行", nil),
+		cmdutil.NewStatsGetCmd("data-overview", "/erp/sale-statistics", "销售数据总览", saleFlags),
+		cmdutil.NewStatsGetCmd("customer-rankings", "/erp/sale-statistics", "客户排行", saleFlags),
+		cmdutil.NewStatsGetCmd("product-rankings", "/erp/sale-statistics", "产品排行", saleFlags),
+		cmdutil.NewStatsGetCmd("employee-rankings", "/erp/sale-statistics", "员工排行", saleFlags),
+		cmdutil.NewStatsGetCmd("region-rankings", "/erp/sale-statistics", "区域排行", saleFlags),
 	)
 	statsCmd.AddCommand(saleStats)
 }

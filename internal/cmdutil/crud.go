@@ -799,6 +799,32 @@ func addSalePurchaseTimeFlags(c *cobra.Command) {
 	}
 }
 
+// ---- 结算模块时间范围（settlementDate[0] / settlementDate[1]） ----
+
+// settlementDateFlags 是结算模块共用的结算日期范围筛选 flag；
+// 实际查询时会被转成 settlementDate[0] / settlementDate[1] 数组参数。
+var settlementDateFlags = []FlagSpec{
+	{Name: "start-date", Usage: "结算日期起始（如 2026-07-01 00:00:00）"},
+	{Name: "end-date", Usage: "结算日期结束（如 2026-07-31 23:59:59）"},
+}
+
+// CollectSettlementDate 把 start-date/end-date 转成 settlementDate[0]/settlementDate[1]。
+func CollectSettlementDate(cmd *cobra.Command, params map[string]any) {
+	if v, _ := cmd.Flags().GetString("start-date"); v != "" {
+		params["settlementDate[0]"] = v
+	}
+	if v, _ := cmd.Flags().GetString("end-date"); v != "" {
+		params["settlementDate[1]"] = v
+	}
+}
+
+// AddSettlementDateFlags 把结算日期范围 flag 注册到命令上。
+func AddSettlementDateFlags(c *cobra.Command) {
+	for _, f := range settlementDateFlags {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+}
+
 // addSalePurchaseBaseFlags 注册采购/销售 list/page-count 共用的筛选 flag。
 // 保留 legacy 已有字段（含 start-time/end-time），并新增 product-name（产品名称模糊搜索）。
 func addSalePurchaseBaseFlags(c *cobra.Command) {

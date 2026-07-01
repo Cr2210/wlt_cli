@@ -48,18 +48,11 @@ func CollectTimeRangeFlags(cmd *cobra.Command, params map[string]any) {
 	params["type"] = t
 
 	startTime, _ := cmd.Flags().GetString("start-time")
-	endTime, _ := cmd.Flags().GetString("end-time")
-	if startTime == "" || endTime == "" {
-		defStart, defEnd := DefaultMonthRange()
-		if startTime == "" {
-			startTime = defStart
-		}
-		if endTime == "" {
-			endTime = defEnd
-		}
+	if startTime == "" {
+		defStart, _ := DefaultMonthRange()
+		startTime = defStart
 	}
 	params["startTime"] = startTime
-	params["endTime"] = endTime
 
 	sortBy, _ := cmd.Flags().GetString("sort-by")
 	if sortBy == "" {
@@ -77,8 +70,7 @@ func DefaultMonthRange() (string, string) {
 
 // AddStatsFlags adds standard time range and sort flags to a stats command.
 func AddStatsFlags(c *cobra.Command) {
-	c.Flags().String("type", "month", "时间类型（day/month/year）")
+	c.Flags().String("type", "month", "时间类型（month/year）")
 	c.Flags().String("start-time", "", "开始时间，默认当月1号")
-	c.Flags().String("end-time", "", "结束时间，默认当前时间")
 	c.Flags().String("sort-by", "amount", "排序字段，默认 amount")
 }

@@ -11,16 +11,33 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
-var orderPlanCmd = &cobra.Command{
+// 计划单号筛选字段（采购/销售共用）。
+var planNoFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "计划单号"},
+}
+
+var planCmd = &cobra.Command{
 	Use:   "plan",
 	Short: "订单计划管理",
 }
 
 func init() {
-	orderCmd.AddCommand(orderPlanCmd)
-	orderPlanCmd.AddCommand(
-		newOrderPlanListCmd(),
-		newOrderPlanPageCountCmd(),
+	// 注册分页/计数子命令（带 type 区分）：purchase / sale。
+	cmdutil.PlanListCmds(planCmd,
+		cmdutil.PlanListCmdConfig{
+			Type:    "PURCHASE_TRANSPORT_PLAN",
+			Label:   "采购计划",
+			Filters: planNoFilters,
+		},
+		cmdutil.PlanListCmdConfig{
+			Type:    "SALE_TRANSPORT_PLAN",
+			Label:   "销售计划",
+			Filters: planNoFilters,
+		},
+	)
+
+	// 注册与类型无关的 CRUD / 业务动作子命令。
+	planCmd.AddCommand(
 		newOrderPlanGetCmd(),
 		newOrderPlanCreateCmd(),
 		newOrderPlanUpdateCmd(),
@@ -31,70 +48,9 @@ func init() {
 		newOrderPlanCompleteCmd(),
 		newOrderPlanExportExcelCmd(),
 	)
-}
 
-// ---- 分页查询 ----
-
-func newOrderPlanListCmd() *cobra.Command {
-	var pageNo, pageSize int
-	var planNo, customerId, status, warehouseId string
-
-	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询订单计划",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{
-				"pageNo":   pageNo,
-				"pageSize": pageSize,
-			}
-			cmdutil.CollectStringFlags(cmd, params, "plan-no", "customer-id", "status", "warehouse-id")
-
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order-plan/page", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询订单计划失败: %s", err), "")
-			}
-			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
-		},
-	}
-	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
-	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&planNo, "plan-no", "", "计划单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	return c
-}
-
-// ---- 分页计数 ----
-
-func newOrderPlanPageCountCmd() *cobra.Command {
-	var planNo, customerId, status, warehouseId string
-
-	c := &cobra.Command{
-		Use:   "page-count",
-		Short: "统计订单计划数量",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "plan-no", "customer-id", "status", "warehouse-id")
-
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order-plan/page-count", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计订单计划数量失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&planNo, "plan-no", "", "计划单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	return c
+	// 挂到 order 命令下。
+	orderCmd.AddCommand(planCmd)
 }
 
 // ---- 获取详情 ----
@@ -316,7 +272,7 @@ func newOrderPlanCompleteCmd() *cobra.Command {
 // ---- 导出 Excel ----
 
 func newOrderPlanExportExcelCmd() *cobra.Command {
-	var planNo, customerId, status, warehouseId string
+	var no, productId, supplierId, customerId string
 
 	c := &cobra.Command{
 		Use:   "export",
@@ -326,7 +282,8 @@ func newOrderPlanExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "plan-no", "customer-id", "status", "warehouse-id")
+			cmdutil.CollectStringFlags(cmd, params, "no", "product-id", "supplier-id", "customer-id")
+			cmdutil.CollectPlanDateRange(cmd, params)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order-plan/export-excel", params)
 			if err != nil {
@@ -336,9 +293,10 @@ func newOrderPlanExportExcelCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&planNo, "plan-no", "", "计划单号")
+	c.Flags().StringVar(&no, "no", "", "计划单号")
+	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
+	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
 	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
+	cmdutil.AddPlanDateRangeFlags(c)
 	return c
 }

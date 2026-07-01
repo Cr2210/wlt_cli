@@ -11,16 +11,35 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
+// 订单列表共用的筛选字段（采购/销售共用：订单号 / 企业 ID / 产品 ID / 下单时间范围）。
+var orderMainFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "订单号"},
+	{Name: "enterprise-id", Usage: "企业 ID"},
+	{Name: "product-id", Usage: "产品 ID"},
+}
+
 var orderMainCmd = &cobra.Command{
 	Use:   "main",
 	Short: "订单管理",
 }
 
 func init() {
-	orderCmd.AddCommand(orderMainCmd)
+	// 分页查询子命令 (按采购/销售区分 type)。
+	cmdutil.OrderTypeCmds(orderMainCmd,
+		cmdutil.OrderTypeConfig{
+			Type:    "PURCHASE",
+			Label:   "采购订单",
+			Filters: orderMainFilters,
+		},
+		cmdutil.OrderTypeConfig{
+			Type:    "SALE",
+			Label:   "销售订单",
+			Filters: orderMainFilters,
+		},
+	)
+
+	// 与类型无关的 CRUD / 业务动作子命令。
 	orderMainCmd.AddCommand(
-		newOrderMainListCmd(),
-		newOrderMainPageCountCmd(),
 		newOrderMainGetCmd(),
 		newOrderMainGetLinkOrderCmd(),
 		newOrderMainCreateCmd(),
@@ -34,70 +53,8 @@ func init() {
 		newOrderMainUnlinkWaybillCmd(),
 		newOrderMainExportExcelCmd(),
 	)
-}
 
-// ---- 分页查询 ----
-
-func newOrderMainListCmd() *cobra.Command {
-	var pageNo, pageSize int
-	var orderNo, customerId, status, warehouseId string
-
-	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询订单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{
-				"pageNo":   pageNo,
-				"pageSize": pageSize,
-			}
-			cmdutil.CollectStringFlags(cmd, params, "order-no", "customer-id", "status", "warehouse-id")
-
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order/page", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询订单失败: %s", err), "")
-			}
-			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
-		},
-	}
-	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
-	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&orderNo, "order-no", "", "订单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	return c
-}
-
-// ---- 分页计数 ----
-
-func newOrderMainPageCountCmd() *cobra.Command {
-	var orderNo, customerId, status, warehouseId string
-
-	c := &cobra.Command{
-		Use:   "page-count",
-		Short: "统计订单数量",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "order-no", "customer-id", "status", "warehouse-id")
-
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order/page-count", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计订单数量失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&orderNo, "order-no", "", "订单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	return c
+	orderCmd.AddCommand(orderMainCmd)
 }
 
 // ---- 获取详情 ----
@@ -124,7 +81,7 @@ func newOrderMainGetCmd() *cobra.Command {
 	return c
 }
 
-// ---- 获取关联订单 ----
+// ---- 获取关联运单 ----
 
 func newOrderMainGetLinkOrderCmd() *cobra.Command {
 	var orderId int64
@@ -231,28 +188,9 @@ func newOrderMainDeleteCmd() *cobra.Command {
 // ---- 更新状态 ----
 
 func newOrderMainUpdateStatusCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update-status",
-		Short: "更新订单状态",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/order/update-status", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新订单状态失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据（含 id 和 status）")
-	_ = c.MarkFlagRequired("data")
+	c := cmdutil.CrudUpdateStatusCmd("/erp/order", "订单")
+	c.Use = "update-status"
+	c.Short = "更新订单状态"
 	return c
 }
 
@@ -399,8 +337,6 @@ func newOrderMainUnlinkWaybillCmd() *cobra.Command {
 // ---- 导出 Excel ----
 
 func newOrderMainExportExcelCmd() *cobra.Command {
-	var orderNo, customerId, status, warehouseId string
-
 	c := &cobra.Command{
 		Use:   "export",
 		Short: "导出订单 Excel",
@@ -409,7 +345,8 @@ func newOrderMainExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "order-no", "customer-id", "status", "warehouse-id")
+			cmdutil.CollectStringFlags(cmd, params, "no", "enterprise-id", "product-id")
+			cmdutil.CollectOrderDateRange(cmd, params)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order/export-excel", params)
 			if err != nil {
@@ -419,9 +356,9 @@ func newOrderMainExportExcelCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&orderNo, "order-no", "", "订单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
+	c.Flags().String("no", "", "订单号")
+	c.Flags().String("enterprise-id", "", "企业 ID")
+	c.Flags().String("product-id", "", "产品 ID")
+	cmdutil.AddOrderDateRangeFlags(c)
 	return c
 }

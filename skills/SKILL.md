@@ -44,7 +44,7 @@ cli_version: ">=0.1.0"
 | `sale` | 销售管理：销售出库 / 销售退货 | [sale-purchase.md](./references/sale-purchase.md) |
 | `purchase` | 采购管理：采购入库 / 采购退货 | [sale-purchase.md](./references/sale-purchase.md) |
 | `finance` | 财务管理：账户 / 付款 / 收款 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 收付款 / 账户结算 | [finance.md](./references/finance.md) |
-| `order` | 订单管理：主订单 / 排产计划订单 | [order.md](./references/order.md) |
+| `order` | 订单管理：主订单 / 计划（采购/销售 + CRUD） | [order.md](./references/order.md) |
 | `produce` | 生产管理：生产单 / 生产计划 | [produce.md](./references/produce.md) |
 | `waybill` | 运单管理：运单全生命周期 / 推送配置 | [waybill.md](./references/waybill.md) |
 | `quality` | 质检管理：称重质检 / 质检单 | [quality-weight.md](./references/quality-weight.md) |
@@ -104,7 +104,7 @@ wlt api GET /erp/customer/page --token fee383b0****fc0 --tenant-id 999 --params 
 用户提到"销售/卖出/销售出库/销售退货" → `sale`
 用户提到"采购/买入/采购入库/采购退货" → `purchase`
 用户提到"财务/账户/付款/收款/退款/核销/开票/转账/调账" → `finance`
-用户提到"订单/主订单/排产/关联运单/取消订单/完成订单" → `order`
+用户提到"订单/主订单/排产/关联运单/取消订单/完成订单/采购计划/销售计划/运输计划" → `order`
 用户提到"生产/生产单/生产计划/质检数据" → `produce`
 用户提到"运单/物流/发货/签收/装卸/推送配置" → `waybill`
 用户提到"质检/检验/质检单/质检报告" → `quality`

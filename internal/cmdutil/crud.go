@@ -444,7 +444,7 @@ func contractListCmd(tc ContractTypeConfig, apiPath string, filters []FlagSpec) 
 			for _, f := range filters {
 				CollectStringFlag(cmd, params, f.Name)
 			}
-			CollectContractDateRange(cmd, params)
+			CollectPlanDateRange(cmd, params)
 			resp, err := GetClient().Get(context.Background(), apiPath+"/page", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("查询%s失败: %s", tc.Label, err), "")
@@ -457,7 +457,7 @@ func contractListCmd(tc ContractTypeConfig, apiPath string, filters []FlagSpec) 
 	for _, f := range filters {
 		c.Flags().String(f.Name, "", f.Usage)
 	}
-	AddContractDateRangeFlags(c)
+	AddPlanDateRangeFlags(c)
 	return c
 }
 
@@ -474,7 +474,7 @@ func contractPageCountCmd(tc ContractTypeConfig, apiPath string, filters []FlagS
 			for _, f := range filters {
 				CollectStringFlag(cmd, params, f.Name)
 			}
-			CollectContractDateRange(cmd, params)
+			CollectPlanDateRange(cmd, params)
 			resp, err := GetClient().Get(context.Background(), apiPath+"/page-count", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("统计%s失败: %s", tc.Label, err), "")
@@ -485,7 +485,7 @@ func contractPageCountCmd(tc ContractTypeConfig, apiPath string, filters []FlagS
 	for _, f := range filters {
 		c.Flags().String(f.Name, "", f.Usage)
 	}
-	AddContractDateRangeFlags(c)
+	AddPlanDateRangeFlags(c)
 	return c
 }
 
@@ -495,6 +495,282 @@ func commandSlug(t string) string {
 	s := strings.ToLower(t)
 	s = strings.ReplaceAll(s, "_", "-")
 	return s
+}
+
+// ---- 计划类型变体（采购运输计划 / 销售运输计划 等共享 /erp/order-plan 端点的子类型） ----
+
+// planPartnerFilters 是计划列表共用的业务伙伴筛选字段（采购用 supplier-id，销售用 customer-id）。
+var planPartnerFilters = []FlagSpec{
+	{Name: "supplier-id", Usage: "供应商 ID"},
+	{Name: "customer-id", Usage: "客户 ID"},
+}
+
+// CollectPlanPartnerFilters 收集采购/销售的 supplierId / customerId 到 params。
+func CollectPlanPartnerFilters(cmd *cobra.Command, params map[string]any) {
+	CollectStringFlags(cmd, params, "supplier-id", "customer-id")
+}
+
+// planDateRangeFlags 是订单计划共用的起止日期筛选 flag（转 startDate[0] / startDate[1]）。
+var planDateRangeFlags = []FlagSpec{
+	{Name: "start", Usage: "计划开始日期起始（如 2026-07-21 00:00:00）"},
+	{Name: "end", Usage: "计划开始日期结束（如 2026-08-19 23:59:59）"},
+}
+
+// CollectPlanDateRange 把 start/end 转成 startDate[0] / startDate[1] 数组参数。
+func CollectPlanDateRange(cmd *cobra.Command, params map[string]any) {
+	if v, _ := cmd.Flags().GetString("start"); v != "" {
+		params["startDate[0]"] = v
+	}
+	if v, _ := cmd.Flags().GetString("end"); v != "" {
+		params["startDate[1]"] = v
+	}
+}
+
+// AddPlanDateRangeFlags 把起止日期 flag 注册到命令上。
+func AddPlanDateRangeFlags(c *cobra.Command) {
+	for _, f := range planDateRangeFlags {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+}
+
+// PlanListCmdConfig 描述一个计划子类型（采购运输计划 / 销售运输计划 ……），
+// 后端统一通过 /erp/order-plan 端点 + type 区分。
+type PlanListCmdConfig struct {
+	Type    string // 后端 type 枚举值，如 "PURCHASE_TRANSPORT_PLAN"
+	Label   string // 中文标签，如 "采购计划"
+	Filters []FlagSpec
+	Use     string // 自定义 cobra 子命令名（默认由 Type 自动转写）
+}
+
+// PlanListCmds 为一组计划子类型生成 list + page-count 子命令，统一注册到 parent。
+func PlanListCmds(parent *cobra.Command, types ...PlanListCmdConfig) {
+	for _, tc := range types {
+		filters := tc.Filters
+		cmd := &cobra.Command{
+			Use:   planCommandSlug(tc.Use, tc.Type),
+			Short: tc.Label + "管理",
+		}
+
+		// list
+		{
+			var pageNo, pageSize int
+			c := &cobra.Command{
+				Use:   "list",
+				Short: "分页查询" + tc.Label,
+				RunE: func(cmd *cobra.Command, args []string) error {
+					if err := EnsureClient(); err != nil {
+						return err
+					}
+					params := map[string]any{
+						"type":     tc.Type,
+						"pageNo":   pageNo,
+						"pageSize": pageSize,
+					}
+					for _, f := range filters {
+						CollectStringFlag(cmd, params, f.Name)
+					}
+					CollectStringFlags(cmd, params, "product-id")
+					CollectPlanPartnerFilters(cmd, params)
+					CollectPlanDateRange(cmd, params)
+					resp, err := GetClient().Get(context.Background(), "/erp/order-plan/page", params)
+					if err != nil {
+						return output.NewExitError(5, fmt.Sprintf("查询%s失败: %s", tc.Label, err), "")
+					}
+					return ParsePagedJSON(resp.Data, pageNo, pageSize)
+				},
+			}
+			c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
+			c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
+			for _, f := range filters {
+				c.Flags().String(f.Name, "", f.Usage)
+			}
+			c.Flags().String("product-id", "", "产品 ID")
+			c.Flags().String("supplier-id", "", "供应商 ID")
+			c.Flags().String("customer-id", "", "客户 ID")
+			AddPlanDateRangeFlags(c)
+			cmd.AddCommand(c)
+		}
+
+		// page-count：复用 list 的 filters（含 product-id / supplier-id / 日期范围）。
+		// page-count 不需要 customer-id（后端校验严格，销售计划带 customerId 到 page-count 更稳妥，这里都带上）。
+		{
+			c := &cobra.Command{
+				Use:   "page-count",
+				Short: "统计" + tc.Label + "数量",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					if err := EnsureClient(); err != nil {
+						return err
+					}
+					params := map[string]any{"type": tc.Type}
+					for _, f := range filters {
+						CollectStringFlag(cmd, params, f.Name)
+					}
+					CollectStringFlags(cmd, params, "product-id")
+					CollectPlanPartnerFilters(cmd, params)
+					CollectPlanDateRange(cmd, params)
+					resp, err := GetClient().Get(context.Background(), "/erp/order-plan/page-count", params)
+					if err != nil {
+						return output.NewExitError(5, fmt.Sprintf("统计%s失败: %s", tc.Label, err), "")
+					}
+					return OutputJSON(json.RawMessage(resp.Data))
+				},
+			}
+			for _, f := range filters {
+				c.Flags().String(f.Name, "", f.Usage)
+			}
+			c.Flags().String("product-id", "", "产品 ID")
+			c.Flags().String("supplier-id", "", "供应商 ID")
+			c.Flags().String("customer-id", "", "客户 ID")
+			AddPlanDateRangeFlags(c)
+			cmd.AddCommand(c)
+		}
+
+		parent.AddCommand(cmd)
+	}
+}
+
+// planCommandSlug 把计划类型枚举值（如 PURCHASE_TRANSPORT_PLAN）转成 cobra 子命令名（如 purchase）。
+// 规则：小写后去掉末尾的 _plan / _transport，取第一个 _ 之前的段。
+// 例：PURCHASE_TRANSPORT_PLAN → purchase，SALE_TRANSPORT_PLAN → sale。
+// Use 显式指定时由调用方控制。
+func planCommandSlug(use, t string) string {
+	if use != "" {
+		return use
+	}
+	s := strings.ToLower(t)
+	s = strings.ReplaceAll(s, "_transport", "")
+	s = strings.TrimSuffix(s, "_plan")
+	if idx := strings.Index(s, "_"); idx >= 0 {
+		s = s[:idx]
+	}
+	return s
+}
+
+// ---- 订单类型变体（采购订单 / 销售订单 共享 /erp/order 端点的子类型） ----
+
+// orderCommonFilters 是订单列表共用的筛选字段。
+var orderCommonFilters = []FlagSpec{
+	{Name: "no", Usage: "订单号"},
+	{Name: "enterprise-id", Usage: "企业 ID"},
+	{Name: "product-id", Usage: "产品 ID"},
+}
+
+// orderDateRangeFlags 是订单列表共用的下单时间范围筛选 flag（转 orderTime[0] / orderTime[1]）。
+var orderDateRangeFlags = []FlagSpec{
+	{Name: "order-start", Usage: "下单时间起始（如 2026-07-14 00:00:00）"},
+	{Name: "order-end", Usage: "下单时间结束（如 2026-08-11 23:59:59）"},
+}
+
+// CollectOrderDateRange 把 order-start/order-end 转成 orderTime[0] / orderTime[1] 数组参数。
+func CollectOrderDateRange(cmd *cobra.Command, params map[string]any) {
+	if v, _ := cmd.Flags().GetString("order-start"); v != "" {
+		params["orderTime[0]"] = v
+	}
+	if v, _ := cmd.Flags().GetString("order-end"); v != "" {
+		params["orderTime[1]"] = v
+	}
+}
+
+// AddOrderDateRangeFlags 把时间范围 flag 注册到命令上。
+func AddOrderDateRangeFlags(c *cobra.Command) {
+	for _, f := range orderDateRangeFlags {
+		c.Flags().String(f.Name, "", f.Usage)
+	}
+}
+
+// OrderTypeConfig 描述一个订单子类型（采购订单 / 销售订单 ……），后端统一通过
+// /erp/order 端点 + type 区分。
+type OrderTypeConfig struct {
+	Type    string // 后端 type 枚举值，如 "PURCHASE" / "SALE"
+	Label   string // 中文标签，如 "采购订单"
+	Use     string // 自定义 cobra 子命令名（默认由 Type 自动转写：PURCHASE → purchase）
+	Filters []FlagSpec
+}
+
+// OrderTypeCmds 为一组订单子类型生成 list + page-count 子命令，统一注册到 parent。
+// 每个子类型自动拥有：list / page-count。
+func OrderTypeCmds(parent *cobra.Command, types ...OrderTypeConfig) {
+	for _, tc := range types {
+		filters := tc.Filters
+		cmd := &cobra.Command{
+			Use:   orderCommandSlug(tc.Use, tc.Type),
+			Short: tc.Label + "管理",
+		}
+
+		// list
+		{
+			var pageNo, pageSize int
+			c := &cobra.Command{
+				Use:   "list",
+				Short: "分页查询" + tc.Label,
+				RunE: func(cmd *cobra.Command, args []string) error {
+					if err := EnsureClient(); err != nil {
+						return err
+					}
+					params := map[string]any{
+						"type":     tc.Type,
+						"pageNo":   pageNo,
+						"pageSize": pageSize,
+					}
+					for _, f := range filters {
+						CollectStringFlag(cmd, params, f.Name)
+					}
+					CollectOrderDateRange(cmd, params)
+					resp, err := GetClient().Get(context.Background(), "/erp/order/page", params)
+					if err != nil {
+						return output.NewExitError(5, fmt.Sprintf("查询%s失败: %s", tc.Label, err), "")
+					}
+					return ParsePagedJSON(resp.Data, pageNo, pageSize)
+				},
+			}
+			c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
+			c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
+			for _, f := range filters {
+				c.Flags().String(f.Name, "", f.Usage)
+			}
+			AddOrderDateRangeFlags(c)
+			cmd.AddCommand(c)
+		}
+
+		// page-count
+		{
+			c := &cobra.Command{
+				Use:   "page-count",
+				Short: "统计" + tc.Label + "数量",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					if err := EnsureClient(); err != nil {
+						return err
+					}
+					params := map[string]any{"type": tc.Type}
+					for _, f := range filters {
+						CollectStringFlag(cmd, params, f.Name)
+					}
+					CollectOrderDateRange(cmd, params)
+					resp, err := GetClient().Get(context.Background(), "/erp/order/page-count", params)
+					if err != nil {
+						return output.NewExitError(5, fmt.Sprintf("统计%s失败: %s", tc.Label, err), "")
+					}
+					return OutputJSON(json.RawMessage(resp.Data))
+				},
+			}
+			for _, f := range filters {
+				c.Flags().String(f.Name, "", f.Usage)
+			}
+			AddOrderDateRangeFlags(c)
+			cmd.AddCommand(c)
+		}
+
+		parent.AddCommand(cmd)
+	}
+}
+
+// orderCommandSlug 把订单类型枚举值（如 PURCHASE / SALE）转成 cobra 子命令名（小写形式）。
+// Use 显式指定时由调用方控制。
+func orderCommandSlug(use, t string) string {
+	if use != "" {
+		return use
+	}
+	return strings.ToLower(t)
 }
 
 // ---- Non-paginated list (uses /list endpoint) ----

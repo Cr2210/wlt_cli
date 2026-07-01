@@ -206,9 +206,13 @@ wlt stock in update-status --data '{"id":1,"status":2}' # 审核通过
 
 ```bash
 wlt sale out list --status 0                       # 查询待审核出库单
+wlt sale out list --product-name 西瓜 --warehouse-id 7 --start-time "2026-07-01 00:00:00" --end-time "2026-07-31 23:59:59"  # 多维度筛选（产品名模糊 + 仓库 + 时间范围）
+wlt sale out list --batch-no PC --customer-id 2001489305039032322                          # 按批次号 + 客户筛选
 wlt sale out get --id <ID>                         # 查看详情
 wlt sale out update-status --data '{"id":...,"status":2}' # 审核
 ```
+
+> `sale out list` / `purchase in list` 完整筛选参数见 [sale-purchase.md](./references/sale-purchase.md)。其中 `--start-time`/`--end-time` 为统一入口，内部按模块自动转为后端要求的数组参数（销售出库 `outTime[0]`/`outTime[1]`、采购入库 `inTime[0]`/`inTime[1]`）。
 
 ### 3. 财务对账
 

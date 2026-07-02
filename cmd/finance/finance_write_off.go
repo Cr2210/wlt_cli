@@ -14,7 +14,8 @@ import (
 func init() {
 	financeCmd.AddCommand(financeWriteOffCmd)
 	financeWriteOffCmd.AddCommand(
-		newFinanceWriteOffListCmd(),
+		newFinanceWriteOffPageCmd(),
+		newFinanceWriteOffPageCountCmd(),
 		newFinanceWriteOffGetCmd(),
 		newFinanceWriteOffCreateCmd(),
 		newFinanceWriteOffUpdateCmd(),
@@ -31,15 +32,62 @@ var financeWriteOffCmd = &cobra.Command{
 	Short: "核销单管理",
 }
 
+// financeWriteOffFilters 包含所有可筛选字段（含 headers，用于 page / export）。
+// 资金核销: type=WRITE_OFF_PURCHASE/WRITE_OFF_SALE, writeOffType=AMOUNT
+// 发票核销: type=WRITE_OFF_IN/WRITE_OFF_OUT, writeOffType=INVOICE
+var financeWriteOffFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "核销单号"},
+	{Name: "type", Usage: "业务类别(WRITE_OFF_PURCHASE/WRITE_OFF_SALE/WRITE_OFF_IN/WRITE_OFF_OUT/...)"},
+	{Name: "write-off-type", Usage: "核销类型(AMOUNT=资金核销/INVOICE=发票核销)"},
+	{Name: "write-off-date", Usage: "核销日期"},
+	{Name: "approve-status", Usage: "审核状态"},
+	{Name: "partner-id", Usage: "合作伙伴 ID"},
+	{Name: "partner-name", Usage: "客户/供应商名称"},
+	{Name: "service-user-id", Usage: "财务负责人 ID"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "source-no", Usage: "源单号"},
+	{Name: "invoice-no", Usage: "发票号"},
+	{Name: "target-no", Usage: "目标单号"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "keyword", Usage: "关键字搜索(单号/名称/发票号)"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "headers", Usage: "自定义导出表头"},
+}
+
+// financeWriteOffPageCountFilters 去掉了 headers。
+var financeWriteOffPageCountFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "核销单号"},
+	{Name: "type", Usage: "业务类别(WRITE_OFF_PURCHASE/WRITE_OFF_SALE/WRITE_OFF_IN/WRITE_OFF_OUT/...)"},
+	{Name: "write-off-type", Usage: "核销类型(AMOUNT=资金核销/INVOICE=发票核销)"},
+	{Name: "write-off-date", Usage: "核销日期"},
+	{Name: "approve-status", Usage: "审核状态"},
+	{Name: "partner-id", Usage: "合作伙伴 ID"},
+	{Name: "partner-name", Usage: "客户/供应商名称"},
+	{Name: "service-user-id", Usage: "财务负责人 ID"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "source-no", Usage: "源单号"},
+	{Name: "invoice-no", Usage: "发票号"},
+	{Name: "target-no", Usage: "目标单号"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "keyword", Usage: "关键字搜索(单号/名称/发票号)"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+}
+
 // ---- 分页查询 ----
 
-func newFinanceWriteOffListCmd() *cobra.Command {
+func newFinanceWriteOffPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var writeOffNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询核销单",
+		Use:   "page",
+		Short: "分页查询核销单(资金核销 WRITE_OFF_PURCHASE/SALE + 发票核销 WRITE_OFF_IN/OUT)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -48,8 +96,7 @@ func newFinanceWriteOffListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectStringFlags(cmd, params, "write-off-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeWriteOffFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-write-off/page", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("查询核销单失败: %s", err), "")
@@ -59,12 +106,30 @@ func newFinanceWriteOffListCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&writeOffNo, "write-off-no", "", "核销单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeWriteOffFilters)
+	return c
+}
+
+// ---- 分页计数 ----
+
+func newFinanceWriteOffPageCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "page-count",
+		Short: "按筛选统计核销单数量",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeWriteOffPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-write-off/page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计核销单失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	addFinanceFilterFlags(c, financeWriteOffPageCountFilters)
 	return c
 }
 
@@ -205,18 +270,21 @@ func newFinanceWriteOffUpdateStatusCmd() *cobra.Command {
 func newFinanceWriteOffSummaryCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "summary",
-		Short: "获取核销单汇总数据",
+		Short: "获取核销单汇总数据（支持按筛选条件）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-write-off/summary", nil)
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeWriteOffPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-write-off/summary", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("获取核销单汇总失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
+	addFinanceFilterFlags(c, financeWriteOffPageCountFilters)
 	return c
 }
 
@@ -247,8 +315,6 @@ func newFinanceWriteOffGetItemRelateCmd() *cobra.Command {
 // ---- 导出 Excel ----
 
 func newFinanceWriteOffExportExcelCmd() *cobra.Command {
-	var writeOffNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
 		Use:   "export",
 		Short: "导出核销单 Excel",
@@ -257,8 +323,7 @@ func newFinanceWriteOffExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "write-off-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeWriteOffFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-write-off/export-excel", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("导出核销单失败: %s", err), "")
@@ -267,11 +332,6 @@ func newFinanceWriteOffExportExcelCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&writeOffNo, "write-off-no", "", "核销单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeWriteOffFilters)
 	return c
 }

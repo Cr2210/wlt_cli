@@ -27,6 +27,7 @@ cli_version: ">=0.1.0"
 - 删除操作接受多个 ID（逗号分隔），确认时必须展示影响范围
 - 状态更新需遵循业务流转规则（如：未审核→已审核→已拒绝）
 - 分页查询默认 `--page-no=1`, `--page-size=20`（flag 用连字符短横线，不是下划线；后端字段为驼峰 `pageNo`/`pageSize`），大数据量需分页遍历
+- `--page-no=-1` 时不进行分页（返回全量），**仅当携带明确的查询参数时才能使用此参数**（避免全表拉取导致性能问题）
 - **每条业务命令必须携带 `--token <accessToken>` 与 `--tenant-id <租户ID>`**（无状态鉴权，从用户/会话获取；token 即后端登录返回的 accessToken，CLI 自动加 `Bearer ` 前缀）
 - 使用 `--profile sit|prod` 切换环境（提供 base_url/api_prefix），`--quiet` 静默模式，`--base-url` 可选覆盖后端地址
 

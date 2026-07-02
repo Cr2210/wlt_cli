@@ -14,7 +14,7 @@ import (
 func init() {
 	financeCmd.AddCommand(financeInvoiceApplyCmd)
 	financeInvoiceApplyCmd.AddCommand(
-		newFinanceInvoiceApplyListCmd(),
+		newFinanceInvoiceApplyPageCmd(),
 		newFinanceInvoiceApplyGetCmd(),
 		newFinanceInvoiceApplyCreateCmd(),
 		newFinanceInvoiceApplyUpdateCmd(),
@@ -25,6 +25,45 @@ func init() {
 	)
 }
 
+var financeInvoiceApplyFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "申请单号"},
+	{Name: "partner-id", Usage: "合作伙伴 ID"},
+	{Name: "partner-name", Usage: "合作伙伴名称"},
+	{Name: "invoice-title", Usage: "发票抬头"},
+	{Name: "tax-no", Usage: "税号"},
+	{Name: "service-user-id", Usage: "财务负责人 ID"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "approve-status", Usage: "审核状态"},
+	{Name: "invoice-date", Usage: "开票日期"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "keyword", Usage: "关键字"},
+	{Name: "headers", Usage: "自定义导出表头"},
+}
+
+var financeInvoiceApplyPageCountFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "申请单号"},
+	{Name: "partner-id", Usage: "合作伙伴 ID"},
+	{Name: "partner-name", Usage: "合作伙伴名称"},
+	{Name: "invoice-title", Usage: "发票抬头"},
+	{Name: "tax-no", Usage: "税号"},
+	{Name: "service-user-id", Usage: "财务负责人 ID"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "approve-status", Usage: "审核状态"},
+	{Name: "invoice-date", Usage: "开票日期"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "keyword", Usage: "关键字"},
+}
+
 var financeInvoiceApplyCmd = &cobra.Command{
 	Use:   "invoice-apply",
 	Short: "开票申请管理",
@@ -32,12 +71,10 @@ var financeInvoiceApplyCmd = &cobra.Command{
 
 // ---- 分页查询 ----
 
-func newFinanceInvoiceApplyListCmd() *cobra.Command {
+func newFinanceInvoiceApplyPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var applyNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
-		Use:   "list",
+		Use:   "page",
 		Short: "分页查询开票申请",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
@@ -47,8 +84,7 @@ func newFinanceInvoiceApplyListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectStringFlags(cmd, params, "apply-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeInvoiceApplyFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice-apply/page", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("查询开票申请失败: %s", err), "")
@@ -58,14 +94,10 @@ func newFinanceInvoiceApplyListCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&applyNo, "apply-no", "", "申请单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeInvoiceApplyFilters)
 	return c
 }
+
 
 // ---- 获取详情 ----
 
@@ -204,26 +236,28 @@ func newFinanceInvoiceApplyUpdateStatusCmd() *cobra.Command {
 func newFinanceInvoiceApplySummaryCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "summary",
-		Short: "获取开票申请汇总数据",
+		Short: "获取开票申请合计（支持按筛选条件）",
+		Long:  "返回 totalCount / checkCount / processCount / approveCount / rejectCount / totalAmount",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice-apply/summary", nil)
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeInvoiceApplyPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice-apply/summary", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("获取开票申请汇总失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("获取开票申请合计失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
+	addFinanceFilterFlags(c, financeInvoiceApplyPageCountFilters)
 	return c
 }
 
 // ---- 导出 Excel ----
 
 func newFinanceInvoiceApplyExportExcelCmd() *cobra.Command {
-	var applyNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
 		Use:   "export",
 		Short: "导出开票申请 Excel",
@@ -232,7 +266,7 @@ func newFinanceInvoiceApplyExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "apply-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
+			collectFinanceFilters(cmd, params, financeInvoiceApplyFilters)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice-apply/export-excel", params)
 			if err != nil {
@@ -242,11 +276,6 @@ func newFinanceInvoiceApplyExportExcelCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&applyNo, "apply-no", "", "申请单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeInvoiceApplyFilters)
 	return c
 }

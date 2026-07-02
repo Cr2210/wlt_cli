@@ -43,7 +43,7 @@ cli_version: ">=0.1.0"
 | `contract` | 合同管理：采购合同&长协 / 销售合同&长协 / 运输合同&长协 / 服务合同&长协 | [contract.md](./references/contract.md) |
 | `sale` | 销售管理：销售出库 / 销售退货 | [sale-purchase.md](./references/sale-purchase.md) |
 | `purchase` | 采购管理：采购入库 / 采购退货 | [sale-purchase.md](./references/sale-purchase.md) |
-| `finance` | 财务管理：账户 / 付款 / 收款 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 收付款 / 账户结算 | [finance.md](./references/finance.md) |
+| `finance` | 财务管理：账户 / 收付款记录 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 账户结算 | [finance.md](./references/finance.md) |
 | `order` | 订单管理：主订单 / 计划（采购/销售 + CRUD） | [order.md](./references/order.md) |
 | `produce` | 生产管理：生产单 / 生产计划 | [produce.md](./references/produce.md) |
 | `waybill` | 运单管理：运单全生命周期 / 推送配置 | [waybill.md](./references/waybill.md) |
@@ -219,8 +219,8 @@ wlt sale out update-status --data '{"id":...,"status":2}' # 审核
 ```bash
 wlt finance account list                           # 查看所有账户
 wlt finance account settlement-page --account-id 1 # 查看账户流水
-wlt finance receipt list --customer-id 1           # 查看客户收款
-wlt finance payment list --supplier-id 1           # 查看供应商付款
+wlt finance receipt-payment page --type RECEIPT    # 查看收款记录
+wlt finance receipt-payment page --type PAYMENT    # 查看付款记录
 ```
 
 ### 4. 运单生命周期(查询 → 装车 → 卸车 → 签收)

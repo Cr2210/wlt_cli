@@ -132,23 +132,34 @@ func newFinanceReceiptPaymentPageCountCmd() *cobra.Command {
 
 func newFinanceReceiptPaymentGetCmd() *cobra.Command {
 	var id int64
+	var no string
 
 	c := &cobra.Command{
 		Use:   "get",
-		Short: "获取收付款详情",
+		Short: "获取收付款详情（id 或 no 任选其一）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/get", map[string]any{"id": id})
+			params := map[string]any{}
+			if id > 0 {
+				params["id"] = id
+			}
+			if no != "" {
+				params["no"] = no
+			}
+			if len(params) == 0 {
+				return output.NewExitError(4, "请指定 --id 或 --no", "")
+			}
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/get", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("获取收付款失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("获取收付款详情失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
 	c.Flags().Int64Var(&id, "id", 0, "收付款 ID")
-	_ = c.MarkFlagRequired("id")
+	c.Flags().StringVar(&no, "no", "", "收付款单号")
 	return c
 }
 

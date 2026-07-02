@@ -20,11 +20,11 @@ var queryCmd = &cobra.Command{
 func init() {
 	stockCmd.AddCommand(queryCmd)
 	queryCmd.AddCommand(newStockQueryGetCmd())
-	queryCmd.AddCommand(newStockQueryListCmd())
+	queryCmd.AddCommand(newStockQueryPageCmd())
 	queryCmd.AddCommand(newStockQueryPageCountCmd())
 	queryCmd.AddCommand(newStockQueryCountCmd())
-	queryCmd.AddCommand(newStockQueryBatchDetailCmd())
-	queryCmd.AddCommand(newStockQueryDetailCountCmd())
+	queryCmd.AddCommand(newStockQueryLedgerCmd())
+	queryCmd.AddCommand(newStockQueryLedgerCountCmd())
 	queryCmd.AddCommand(newStockQueryRecordCountCmd())
 }
 
@@ -64,10 +64,10 @@ func newStockQueryGetCmd() *cobra.Command {
 	return c
 }
 
-func newStockQueryListCmd() *cobra.Command {
+func newStockQueryPageCmd() *cobra.Command {
 	var pageNo, pageSize int
 	c := &cobra.Command{
-		Use:   "list",
+		Use:   "page",
 		Short: "分页查询产品库存",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
@@ -77,8 +77,20 @@ func newStockQueryListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectIntFlags(cmd, params, "warehouse-id", "product-id")
-			cmdutil.CollectStringFlags(cmd, params, "product-name")
+			cmdutil.CollectStringFlags(cmd, params,
+				"product-id",
+				"warehouse-id",
+				"metrics-name",
+				"batch-no",
+				"send-address",
+				"plan-no",
+				"supplier-id",
+				"supplier-name",
+				"is-detail",
+				"count-positive",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock/page", params)
 			if err != nil {
@@ -89,9 +101,18 @@ func newStockQueryListCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().Int64("warehouse-id", 0, "仓库 ID")
-	c.Flags().Int64("product-id", 0, "产品 ID")
-	c.Flags().String("product-name", "", "产品名称（模糊）")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("warehouse-id", "", "仓库编号")
+	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("send-address", "", "发货地")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("supplier-id", "", "供应商编号")
+	c.Flags().String("supplier-name", "", "供应商名称")
+	c.Flags().String("is-detail", "", "是否明细")
+	c.Flags().String("count-positive", "", "库存为正数")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
 
@@ -139,11 +160,11 @@ func newStockQueryCountCmd() *cobra.Command {
 	return c
 }
 
-func newStockQueryBatchDetailCmd() *cobra.Command {
+func newStockQueryLedgerCmd() *cobra.Command {
 	var pageNo, pageSize int
 	c := &cobra.Command{
-		Use:   "batch-detail",
-		Short: "获取批次明细",
+		Use:   "ledger",
+		Short: "查询库存台账（库存行的历史进出明细）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -152,11 +173,23 @@ func newStockQueryBatchDetailCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectIntFlags(cmd, params, "product-id", "warehouse-id")
+			cmdutil.CollectStringFlags(cmd, params,
+				"product-id",
+				"warehouse-id",
+				"metrics-name",
+				"batch-no",
+				"send-address",
+				"plan-no",
+				"supplier-id",
+				"supplier-name",
+				"is-detail",
+				"count-positive",
+				"keyword",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock/batch-detail", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询批次明细失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("查询库存台账失败: %s", err), "")
 			}
 			var paged struct {
 				List  json.RawMessage `json:"list"`
@@ -174,21 +207,42 @@ func newStockQueryBatchDetailCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().Int64("product-id", 0, "产品 ID")
-	c.Flags().Int64("warehouse-id", 0, "仓库 ID")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("warehouse-id", "", "仓库编号")
+	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("send-address", "", "发货地")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("supplier-id", "", "供应商编号")
+	c.Flags().String("supplier-name", "", "供应商名称")
+	c.Flags().String("is-detail", "", "是否明细")
+	c.Flags().String("count-positive", "", "库存为正数")
+	c.Flags().String("keyword", "", "关键字")
 	return c
 }
 
 func newStockQueryPageCountCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "page-count",
-		Short: "按筛选统计产品库存数量",
+		Short: "按筛选统计产品库存数量与总成本",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "product-id", "warehouse-id", "metrics-name", "batch-no", "keyword")
+			cmdutil.CollectStringFlags(cmd, params,
+				"product-id",
+				"warehouse-id",
+				"metrics-name",
+				"batch-no",
+				"send-address",
+				"plan-no",
+				"supplier-id",
+				"supplier-name",
+				"is-detail",
+				"count-positive",
+				"keyword",
+			)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock/page-count", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("统计库存失败: %s", err), "")
@@ -196,35 +250,60 @@ func newStockQueryPageCountCmd() *cobra.Command {
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	c.Flags().String("product-id", "", "产品 ID")
-	c.Flags().String("warehouse-id", "", "仓库 ID")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("warehouse-id", "", "仓库编号")
 	c.Flags().String("metrics-name", "", "指标名称")
 	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("send-address", "", "发货地")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("supplier-id", "", "供应商编号")
+	c.Flags().String("supplier-name", "", "供应商名称")
+	c.Flags().String("is-detail", "", "是否明细")
+	c.Flags().String("count-positive", "", "库存为正数")
 	c.Flags().String("keyword", "", "关键字")
 	return c
 }
 
-func newStockQueryDetailCountCmd() *cobra.Command {
+func newStockQueryLedgerCountCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "detail-count",
-		Short: "统计批次明细数量",
+		Use:   "ledger-count",
+		Short: "按筛选统计库存台账数量与总成本",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "product-id", "warehouse-id", "metrics-name", "batch-no")
+			cmdutil.CollectStringFlags(cmd, params,
+				"product-id",
+				"warehouse-id",
+				"metrics-name",
+				"batch-no",
+				"send-address",
+				"plan-no",
+				"supplier-id",
+				"supplier-name",
+				"is-detail",
+				"count-positive",
+				"keyword",
+			)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock/detail-count", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计批次明细失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("统计库存台账失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	c.Flags().String("product-id", "", "产品 ID")
-	c.Flags().String("warehouse-id", "", "仓库 ID")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("warehouse-id", "", "仓库编号")
 	c.Flags().String("metrics-name", "", "指标名称")
 	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("send-address", "", "发货地")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("supplier-id", "", "供应商编号")
+	c.Flags().String("supplier-name", "", "供应商名称")
+	c.Flags().String("is-detail", "", "是否明细")
+	c.Flags().String("count-positive", "", "库存为正数")
+	c.Flags().String("keyword", "", "关键字")
 	return c
 }
 

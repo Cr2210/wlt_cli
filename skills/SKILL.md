@@ -309,7 +309,7 @@ Step 3 → 执行命令
 > **本轮（2026-06-27）变更**：修复 `profit-event` / `stock-report` / `homepage` / `job-trigger` 路径 bug；修复 filter flag 的 kebab→camelCase 参数名（此前 `--supplier-id` 等多词筛选不生效）；新增 finance invoice/payment-apply/prepayment-apply 查询、report direct、stock 与 stock-record 多个查询/统计端点、legacy 单据域 page-count。标 🛠 项为路径已对齐文档、待有效 token 实测。
 
 ### ✅ 完全可用
-- **库存 stock**：warehouse / query(list·count·get) / record(list) / in / out / move / check
+- **库存 stock**：warehouse / query(page·page-count·count·get·ledger·ledger-count) / record(page·page-count·get·count·record-page·total-cost) / in / out / move / check
 - **产品 product**：list / simple-list / category / unit / metrics / get-metrics / metrics item-list
 - **客户/供应商**：list / simple-list / page-count / credit（仅客户）/ invoice / settlement
 - **合同 contract**：7 个子类（purchase-long-cooperate / sale-contract / sale-long-cooperate / transport / transport-long / service-contract / service-long），每个子类含 list / page-count / get / update-status / create / update / delete

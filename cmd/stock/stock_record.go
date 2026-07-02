@@ -19,7 +19,7 @@ var recordCmd = &cobra.Command{
 
 func init() {
 	stockCmd.AddCommand(recordCmd)
-	recordCmd.AddCommand(newRecordListCmd())
+	recordCmd.AddCommand(newRecordPageCmd())
 	recordCmd.AddCommand(newRecordPageCountCmd())
 	recordCmd.AddCommand(newRecordGetCmd())
 	recordCmd.AddCommand(newRecordCountCmd())
@@ -27,11 +27,11 @@ func init() {
 	recordCmd.AddCommand(newRecordTotalCostCmd())
 }
 
-func newRecordListCmd() *cobra.Command {
+func newRecordPageCmd() *cobra.Command {
 	var pageNo, pageSize int
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询库存明细",
+		Use:   "page",
+		Short: "分页查询出入库明细",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -40,24 +40,42 @@ func newRecordListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectIntFlags(cmd, params, "product-id", "warehouse-id")
-			cmdutil.CollectStringFlags(cmd, params, "product-name", "type", "start-time", "end-time")
+			cmdutil.CollectStringFlags(cmd, params,
+				"product-id",
+				"category-id",
+				"warehouse-id",
+				"biz-type",
+				"biz-no",
+				"create-time",
+				"in-time",
+				"metrics-name",
+				"product-name",
+				"batch-no",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock-record/page", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询明细失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("查询出入库明细失败: %s", err), "")
 			}
 			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
 		},
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().Int64("product-id", 0, "产品 ID")
-	c.Flags().Int64("warehouse-id", 0, "仓库 ID")
-	c.Flags().String("product-name", "", "产品名称（模糊）")
-	c.Flags().String("type", "", "类型")
-	c.Flags().String("start-time", "", "开始时间")
-	c.Flags().String("end-time", "", "结束时间")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("category-id", "", "产品分类编号")
+	c.Flags().String("warehouse-id", "", "仓库编号")
+	c.Flags().String("biz-type", "", "业务类型")
+	c.Flags().String("biz-no", "", "业务单号")
+	c.Flags().String("create-time", "", "操作时间")
+	c.Flags().String("in-time", "", "出入库时间")
+	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
 
@@ -103,26 +121,41 @@ func newRecordCountCmd() *cobra.Command {
 func newRecordPageCountCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "page-count",
-		Short: "按筛选统计库存明细数量",
+		Short: "按筛选统计出入库明细数量",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "product-id", "warehouse-id", "product-name", "biz-type", "biz-no", "metrics-name", "batch-no", "keyword")
+			cmdutil.CollectStringFlags(cmd, params,
+				"product-id",
+				"category-id",
+				"warehouse-id",
+				"biz-type",
+				"biz-no",
+				"create-time",
+				"in-time",
+				"metrics-name",
+				"product-name",
+				"batch-no",
+				"keyword",
+			)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/stock-record/page-count", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计明细失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("统计出入库明细失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	c.Flags().String("product-id", "", "产品 ID")
-	c.Flags().String("warehouse-id", "", "仓库 ID")
-	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("category-id", "", "产品分类编号")
+	c.Flags().String("warehouse-id", "", "仓库编号")
 	c.Flags().String("biz-type", "", "业务类型")
 	c.Flags().String("biz-no", "", "业务单号")
+	c.Flags().String("create-time", "", "操作时间")
+	c.Flags().String("in-time", "", "出入库时间")
 	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("product-name", "", "产品名称")
 	c.Flags().String("batch-no", "", "批次号")
 	c.Flags().String("keyword", "", "关键字")
 	return c

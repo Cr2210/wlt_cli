@@ -17,15 +17,18 @@
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
 | `wlt stock query get` | 获取单个库存 | `--id` 或 `--product-id` + `--warehouse-id` |
-| `wlt stock query list` | 分页查询库存 | `--page-no`, `--page-size`, `--warehouse-id`, `--product-name` |
+| `wlt stock query page` | 分页查询库存 | `--page-no`, `--page-size`, `--product-id`, `--warehouse-id`, `--metrics-name`, `--batch-no`, `--send-address`, `--plan-no`, `--supplier-id`, `--supplier-name`, `--is-detail`, `--count-positive`, `--keyword`, `--headers` |
+| `wlt stock query page-count` | 按筛选统计库存数量与总成本 | `--product-id`, `--warehouse-id`, `--metrics-name`, `--batch-no`, `--send-address`, `--plan-no`, `--supplier-id`, `--supplier-name`, `--is-detail`, `--count-positive`, `--keyword` |
 | `wlt stock query count` | 统计库存数量 | `--product-id`（**必填**，后端强制）, `--warehouse-id`（可选）, `--metric-name`（可选） |
-| `wlt stock query batch-detail` | 获取批次明细 | `--page-no`, `--page-size`, `--product-id`, `--warehouse-id` |
+| `wlt stock query ledger` | 查询库存台账（库存行的历史进出明细） | 同 `page` 的筛选参数 |
+| `wlt stock query ledger-count` | 按筛选统计库存台账数量与总成本 | 同 `ledger` 的筛选参数 |
 
 ## 入库单 (`wlt stock in`)
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock in list` | 分页查询入库单 | `--page-no`, `--page-size`, `--no`, `--status` |
+| `wlt stock in page` | 分页查询入库单 | `--page-no`, `--page-size`, `--no`, `--supplier-id`, `--supplier-name`, `--in-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock in page-count` | 按筛选统计入库单数量 | 同 `in page`（去 `--headers`） |
 | `wlt stock in get --id <N>` | 获取入库单详情 | `--id`（必填） |
 | `wlt stock in create --data '<json>'` | 创建入库单 | `--data`（必填） |
 | `wlt stock in update --data '<json>'` | 更新入库单 | `--data`（必填） |
@@ -48,9 +51,10 @@
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock record list` | 分页查询明细 | `--page-no`, `--page-size`, `--product-id`, `--warehouse-id` |
-| `wlt stock record get --id <N>` | 获取明细详情 | `--id`（必填） |
-| `wlt stock record count` | 获取明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
+| `wlt stock record page` | 分页查询出入库明细 | `--page-no`, `--page-size`, `--product-id`, `--category-id`, `--warehouse-id`, `--biz-type`, `--biz-no`, `--create-time`, `--in-time`, `--metrics-name`, `--product-name`, `--batch-no`, `--keyword`, `--headers` |
+| `wlt stock record page-count` | 按筛选统计出入库明细数量 | 同 `record page`（去 `--headers`） |
+| `wlt stock record get --id <N>` | 获取出入库明细详情 | `--id`（必填） |
+| `wlt stock record count` | 获取出入库明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
 
 ## 常见工作流
 
@@ -58,7 +62,7 @@
 
 ```bash
 wlt stock warehouse simple-list                    # 获取仓库列表
-wlt stock query list --warehouse-id <ID>           # 查询库存
+wlt stock query page --warehouse-id <ID>           # 查询库存
 ```
 
 ### 创建入库单
@@ -72,6 +76,6 @@ wlt stock in create --data '{"warehouseId":1,"items":[{"productId":1,"count":10}
 ### 审核出入库单
 
 ```bash
-wlt stock in list --status 0                       # 查询待审核
+wlt stock in page --status 0                       # 查询待审核
 wlt stock in update-status --data '{"id":1,"status":2}' # 审核通过
 ```

@@ -35,7 +35,7 @@ wlt auth status
 wlt stock warehouse list
 
 # 查询库存
-wlt stock query list --warehouse-id 1
+wlt stock query page --warehouse-id 1
 
 # 通用 API 调用
 wlt api GET /erp/warehouse/simple-list
@@ -56,12 +56,12 @@ wlt --profile prod auth login  # 使用生产环境
 | 子域 | 命令 | 操作 |
 |------|------|------|
 | 仓库 | `wlt stock warehouse` | list, get, create, update, delete, update-status, simple-list |
-| 库存 | `wlt stock query` | get, list, count, batch-detail |
-| 入库 | `wlt stock in` | list, get, create, update, delete, update-status |
+| 库存 | `wlt stock query` | get, page, page-count, count, ledger, ledger-count |
+| 入库 | `wlt stock in` | page, page-count, get, create, update, delete, update-status |
 | 出库 | `wlt stock out` | 同入库 |
 | 调拨 | `wlt stock move` | 同入库 |
 | 盘点 | `wlt stock check` | 同入库 |
-| 明细 | `wlt stock record` | list, get, count |
+| 明细 | `wlt stock record` | page, page-count, get, count, record-page, total-cost |
 
 ## 输出协议
 

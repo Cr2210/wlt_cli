@@ -336,7 +336,7 @@ Step 3 → 执行命令
 - **路径修复**：`profit-event *`（→`/erp/profit/event/*`）、`report stock warehouse/buy-send/finance/produce`（→对应 `*-page` 分页端点）、`job-trigger *`（→`/erp/job-trigger/*`）、`homepage dashboard2/inventory-backlog/product-ranking`（不再被强制到 dashboard6）
 - **筛选修复**：多词 filter flag 现正确转 camelCase（`--supplier-id`→`supplierId`），此前此类筛选条件不生效
 - **新增查询**：
-  - 财务：`finance invoice / payment-apply / prepayment-apply`（list·get·summary）
+  - 财务：`finance invoice / payment-apply / prepayment-apply`（`payment-apply` 已对齐 `page`/`page-count`/`get`/`summary`）
   - 报表：`report direct detail / detail-count`、`report stock *-count`、`report purchase/sale *-count`
   - 库存：`stock query page-count / detail-count / stock-record-count`、`stock record page-count / record-page / total-cost`
   - 单据域：stock in/out/move/check、purchase in/return、sale out/return 现均含 `page-count`

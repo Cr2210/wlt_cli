@@ -20,7 +20,8 @@ var qualityInspectionCmd = &cobra.Command{
 func init() {
 	qualityCmd.AddCommand(qualityInspectionCmd)
 	qualityInspectionCmd.AddCommand(
-		newQualityInspectionListCmd(),
+		newQualityInspectionPageCmd(),
+		newQualityInspectionPageCountCmd(),
 		newQualityInspectionGetCmd(),
 		newQualityInspectionCreateCmd(),
 		newQualityInspectionUpdateCmd(),
@@ -37,13 +38,11 @@ func init() {
 
 // ---- 分页查询 ----
 
-func newQualityInspectionListCmd() *cobra.Command {
+func newQualityInspectionPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var inspectionNo, status, warehouseId, productId, businessId, businessType string
-
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询质检单",
+		Use:   "page",
+		Short: "分页查询质检记录",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -52,23 +51,115 @@ func newQualityInspectionListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectStringFlags(cmd, params, "inspection-no", "status", "warehouse-id", "product-id", "business-id", "business-type")
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"inspection-type",
+				"conclusion",
+				"inspection-date",
+				"product-name",
+				"inspector-result",
+				"biz-no",
+				"customer-name",
+				"supplier-name",
+				"inspector-unit",
+				"inspector-name",
+				"status",
+				"creator-name",
+				"create-time",
+				"updater-name",
+				"update-time",
+				"custom-order",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/quality-inspection/page", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询质检单失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("查询质检记录失败: %s", err), "")
 			}
 			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
 		},
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&inspectionNo, "inspection-no", "", "质检单号")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
-	c.Flags().StringVar(&businessId, "business-id", "", "业务 ID")
-	c.Flags().StringVar(&businessType, "business-type", "", "业务类型")
+	c.Flags().String("no", "", "质检单号")
+	c.Flags().String("inspection-type", "", "检验类型")
+	c.Flags().String("conclusion", "", "质检结论")
+	c.Flags().String("inspection-date", "", "检验日期")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("inspector-result", "", "检验结果")
+	c.Flags().String("biz-no", "", "业务单据号")
+	c.Flags().String("customer-name", "", "客户")
+	c.Flags().String("supplier-name", "", "供应商")
+	c.Flags().String("inspector-unit", "", "检验单位")
+	c.Flags().String("inspector-name", "", "质检员名称")
+	c.Flags().String("status", "", "审核状态")
+	c.Flags().String("creator-name", "", "创建人名称")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("updater-name", "", "更新人名称")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("custom-order", "", "前端自定义排序规则")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
+	return c
+}
+
+// ---- 分页计数 ----
+
+func newQualityInspectionPageCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "page-count",
+		Short: "按筛选统计质检记录数量",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"inspection-type",
+				"conclusion",
+				"inspection-date",
+				"product-name",
+				"inspector-result",
+				"biz-no",
+				"customer-name",
+				"supplier-name",
+				"inspector-unit",
+				"inspector-name",
+				"status",
+				"creator-name",
+				"create-time",
+				"updater-name",
+				"update-time",
+				"custom-order",
+				"keyword",
+			)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/quality-inspection/page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计质检记录失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().String("no", "", "质检单号")
+	c.Flags().String("inspection-type", "", "检验类型")
+	c.Flags().String("conclusion", "", "质检结论")
+	c.Flags().String("inspection-date", "", "检验日期")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("inspector-result", "", "检验结果")
+	c.Flags().String("biz-no", "", "业务单据号")
+	c.Flags().String("customer-name", "", "客户")
+	c.Flags().String("supplier-name", "", "供应商")
+	c.Flags().String("inspector-unit", "", "检验单位")
+	c.Flags().String("inspector-name", "", "质检员名称")
+	c.Flags().String("status", "", "审核状态")
+	c.Flags().String("creator-name", "", "创建人名称")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("updater-name", "", "更新人名称")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("custom-order", "", "前端自定义排序规则")
+	c.Flags().String("keyword", "", "关键字")
 	return c
 }
 
@@ -291,32 +382,63 @@ func newQualityInspectionOrderWaybillInspectionCmd() *cobra.Command {
 // ---- 导出 Excel ----
 
 func newQualityInspectionExportExcelCmd() *cobra.Command {
-	var inspectionNo, status, warehouseId, productId, businessId, businessType string
-
 	c := &cobra.Command{
 		Use:   "export",
-		Short: "导出质检单 Excel",
+		Short: "导出质检记录 Excel",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "inspection-no", "status", "warehouse-id", "product-id", "business-id", "business-type")
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"inspection-type",
+				"conclusion",
+				"inspection-date",
+				"product-name",
+				"inspector-result",
+				"biz-no",
+				"customer-name",
+				"supplier-name",
+				"inspector-unit",
+				"inspector-name",
+				"status",
+				"creator-name",
+				"create-time",
+				"updater-name",
+				"update-time",
+				"custom-order",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/quality-inspection/export-excel", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出质检单失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("导出质检记录失败: %s", err), "")
 			}
 			fmt.Println("导出成功，返回数据：", string(resp.Data))
 			return nil
 		},
 	}
-	c.Flags().StringVar(&inspectionNo, "inspection-no", "", "质检单号")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
-	c.Flags().StringVar(&businessId, "business-id", "", "业务 ID")
-	c.Flags().StringVar(&businessType, "business-type", "", "业务类型")
+	c.Flags().String("no", "", "质检单号")
+	c.Flags().String("inspection-type", "", "检验类型")
+	c.Flags().String("conclusion", "", "质检结论")
+	c.Flags().String("inspection-date", "", "检验日期")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("inspector-result", "", "检验结果")
+	c.Flags().String("biz-no", "", "业务单据号")
+	c.Flags().String("customer-name", "", "客户")
+	c.Flags().String("supplier-name", "", "供应商")
+	c.Flags().String("inspector-unit", "", "检验单位")
+	c.Flags().String("inspector-name", "", "质检员名称")
+	c.Flags().String("status", "", "审核状态")
+	c.Flags().String("creator-name", "", "创建人名称")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("updater-name", "", "更新人名称")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("custom-order", "", "前端自定义排序规则")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
 

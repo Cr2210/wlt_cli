@@ -56,6 +56,30 @@
 | `wlt stock record get --id <N>` | 获取出入库明细详情 | `--id`（必填） |
 | `wlt stock record count` | 获取出入库明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
 
+## 调拨单 (`wlt stock move`)
+
+| 命令 | 说明 | 关键参数 |
+|------|------|---------|
+| `wlt stock move page` | 分页查询调拨单 | `--page-no`, `--page-size`, `--no`, `--move-time`, `--create-time`, `--update-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--updater`, `--updater-name`, `--product-id`, `--from-warehouse-id`, `--to-warehouse-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock move page-count` | 按筛选统计调拨单数量 | 同 `move page`（去 `--headers`） |
+| `wlt stock move get --id <N>` | 获取调拨单详情 | `--id`（必填） |
+| `wlt stock move create --data '<json>'` | 创建调拨单 | `--data`（必填） |
+| `wlt stock move update --data '<json>'` | 更新调拨单 | `--data`（必填） |
+| `wlt stock move delete --ids <id1,id2>` | 删除调拨单 | `--ids`（必填） |
+| `wlt stock move update-status --data '<json>'` | 更新调拨单状态 | `--data`（必填，含 id 和 status） |
+
+## 盘点单 (`wlt stock check`)
+
+| 命令 | 说明 | 关键参数 |
+|------|------|---------|
+| `wlt stock check page` | 分页查询盘点单 | `--page-no`, `--page-size`, `--no`, `--warehouse-id`, `--check-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--create-time`, `--update-time`, `--updater`, `--updater-name`, `--product-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock check page-count` | 按筛选统计盘点单数量 | 同 `check page`（去 `--headers`） |
+| `wlt stock check get --id <N>` | 获取盘点单详情 | `--id`（必填） |
+| `wlt stock check create --data '<json>'` | 创建盘点单 | `--data`（必填） |
+| `wlt stock check update --data '<json>'` | 更新盘点单 | `--data`（必填） |
+| `wlt stock check delete --ids <id1,id2>` | 删除盘点单 | `--ids`（必填） |
+| `wlt stock check update-status --data '<json>'` | 更新盘点单状态 | `--data`（必填，含 id 和 status） |
+
 ## 出库单 (`wlt stock out`)
 
 | 命令 | 说明 | 关键参数 |

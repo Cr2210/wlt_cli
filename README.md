@@ -59,8 +59,8 @@ wlt --profile prod auth login  # 使用生产环境
 | 库存 | `wlt stock query` | get, page, page-count, count, ledger, ledger-count |
 | 入库 | `wlt stock in` | page, page-count, get, create, update, delete, update-status |
 | 出库 | `wlt stock out` | page, page-count, get, create, update, delete, update-status |
-| 调拨 | `wlt stock move` | 同入库 |
-| 盘点 | `wlt stock check` | 同入库 |
+| 调拨 | `wlt stock move` | page, page-count, get, create, update, delete, update-status |
+| 盘点 | `wlt stock check` | page, page-count, get, create, update, delete, update-status |
 | 明细 | `wlt stock record` | page, page-count, get, count, record-page, total-cost |
 
 ## 输出协议

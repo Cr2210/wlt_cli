@@ -72,7 +72,8 @@ wlt quality weight waybill-page \
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt quality inspection list` | 分页查询质检单 | `--inspection-no`, `--status`, `--warehouse-id`, `--product-id`, `--business-id`, `--business-type`, `--page-no`, `--page-size` |
+| `wlt quality inspection page` | 分页查询质检记录 | `--page-no`, `--page-size`, `--no`, `--inspection-type`, `--conclusion`, `--inspection-date`, `--product-name`, `--inspector-result`, `--biz-no`, `--customer-name`, `--supplier-name`, `--inspector-unit`, `--inspector-name`, `--status`, `--creator-name`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt quality inspection page-count` | 按筛选统计质检记录数量 | 同 `inspection page`（去 `--headers`） |
 | `wlt quality inspection get --id <N>` | 获取质检单详情 | `--id`（必填） |
 | `wlt quality inspection create --data '<json>'` | 创建质检单 | `--data`（必填） |
 | `wlt quality inspection update --data '<json>'` | 更新质检单 | `--data`（必填） |
@@ -81,7 +82,7 @@ wlt quality weight waybill-page \
 | `wlt quality inspection summary` | 质检汇总 | 无 |
 | `wlt quality inspection relate-list` | 关联质检列表 | `--business-id`, `--business-type` |
 | `wlt quality inspection order-waybill-inspection` | 订单运单质检 | `--business-id`, `--business-type` |
-| `wlt quality inspection export` | 导出 Excel | `--inspection-no`, `--status`, `--warehouse-id`, `--product-id`, `--business-id`, `--business-type` |
+| `wlt quality inspection export` | 导出质检记录 Excel | 同 `inspection page` |
 | `wlt quality inspection refresh-all-summary` | 刷新汇总 | 无 |
 | `wlt quality inspection import --file <path>` | 导入 Excel | `--file`（必填） |
 

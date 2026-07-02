@@ -97,18 +97,21 @@
 | `wlt finance invoice-apply summary` | 汇总 | 无 |
 | `wlt finance invoice-apply export` | 导出 Excel | `--apply-no`, `--customer-id`, `--supplier-id`, `--status`, `--account-id`, `--reviewer-id` |
 
-## 收付款 (`wlt finance receipt-payment`)
+## 收付款记录 (`wlt finance receipt-payment`)
+
+> `type=RECEIPT` 收款 / `type=PAYMENT` 付款
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt finance receipt-payment list` | 分页查询 | `--receipt-payment-no`, `--customer-id`, `--supplier-id`, `--status`, `--account-id`, `--reviewer-id`, `--page-no`, `--page-size` |
-| `wlt finance receipt-payment get --id <N>` | 获取详情 | `--id`（必填） |
-| `wlt finance receipt-payment create --data '<json>'` | 创建 | `--data`（必填） |
-| `wlt finance receipt-payment update --data '<json>'` | 更新 | `--data`（必填） |
-| `wlt finance receipt-payment delete --id <N>` | 删除 | `--id`（必填） |
-| `wlt finance receipt-payment update-status --data '<json>'` | 更新状态 | `--data`（必填） |
-| `wlt finance receipt-payment summary` | 汇总 | 无 |
-| `wlt finance receipt-payment export` | 导出 Excel | `--receipt-payment-no`, `--customer-id`, `--supplier-id`, `--status`, `--account-id`, `--reviewer-id` |
+| `wlt finance receipt-payment page` | 分页查询收付款记录 | `--page-no`, `--page-size`, `--no`, `--type`, `--pay-date`, `--account-id`, `--account-name`, `--account-no`, `--partner-id`, `--partner-name`, `--service-user-id`, `--service-user-name`, `--status`, `--approve-status`, `--remark`, `--creator-name`, `--updater-name`, `--create-time`, `--update-time`, `--keyword`, `--custom-order`, `--headers` |
+| `wlt finance receipt-payment page-count` | 按筛选统计收付款记录数量 | 同 `receipt-payment page`（去 `--headers`） |
+| `wlt finance receipt-payment get --id <N>` | 获取收付款详情 | `--id`（必填） |
+| `wlt finance receipt-payment create --data '<json>'` | 创建收付款 | `--data`（必填） |
+| `wlt finance receipt-payment update --data '<json>'` | 更新收付款 | `--data`（必填） |
+| `wlt finance receipt-payment delete --id <N>` | 删除收付款 | `--id`（必填） |
+| `wlt finance receipt-payment update-status --data '<json>'` | 更新收付款状态 | `--data`（必填） |
+| `wlt finance receipt-payment summary` | 获取收付款汇总数据（支持同 `page-count` 的筛选） | 同 `receipt-payment page-count` |
+| `wlt finance receipt-payment export` | 导出收付款记录 Excel | 同 `receipt-payment page` |
 
 ## 账户结算 (`wlt finance account-settlement`)
 

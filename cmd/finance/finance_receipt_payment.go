@@ -14,7 +14,8 @@ import (
 func init() {
 	financeCmd.AddCommand(financeReceiptPaymentCmd)
 	financeReceiptPaymentCmd.AddCommand(
-		newFinanceReceiptPaymentListCmd(),
+		newFinanceReceiptPaymentPageCmd(),
+		newFinanceReceiptPaymentPageCountCmd(),
 		newFinanceReceiptPaymentGetCmd(),
 		newFinanceReceiptPaymentCreateCmd(),
 		newFinanceReceiptPaymentUpdateCmd(),
@@ -25,6 +26,51 @@ func init() {
 	)
 }
 
+var financeReceiptPaymentFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "单号"},
+	{Name: "type", Usage: "业务类别（RECEIPT 收款 / PAYMENT 付款）"},
+	{Name: "pay-date", Usage: "收付款日期"},
+	{Name: "account-id", Usage: "收付款账户"},
+	{Name: "account-name", Usage: "账户名称"},
+	{Name: "account-no", Usage: "账户账号"},
+	{Name: "partner-id", Usage: "客户/供应商"},
+	{Name: "partner-name", Usage: "客户/供应商名称"},
+	{Name: "service-user-id", Usage: "财务负责人"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "status", Usage: "核销状态"},
+	{Name: "approve-status", Usage: "审批状态"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "keyword", Usage: "关键字"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "headers", Usage: "自定义导出表头"},
+}
+
+var financeReceiptPaymentPageCountFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "单号"},
+	{Name: "type", Usage: "业务类别（RECEIPT 收款 / PAYMENT 付款）"},
+	{Name: "pay-date", Usage: "收付款日期"},
+	{Name: "account-id", Usage: "收付款账户"},
+	{Name: "account-name", Usage: "账户名称"},
+	{Name: "account-no", Usage: "账户账号"},
+	{Name: "partner-id", Usage: "客户/供应商"},
+	{Name: "partner-name", Usage: "客户/供应商名称"},
+	{Name: "service-user-id", Usage: "财务负责人"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "status", Usage: "核销状态"},
+	{Name: "approve-status", Usage: "审批状态"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "keyword", Usage: "关键字"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+}
+
 var financeReceiptPaymentCmd = &cobra.Command{
 	Use:   "receipt-payment",
 	Short: "收付款管理",
@@ -32,13 +78,11 @@ var financeReceiptPaymentCmd = &cobra.Command{
 
 // ---- 分页查询 ----
 
-func newFinanceReceiptPaymentListCmd() *cobra.Command {
+func newFinanceReceiptPaymentPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var receiptPaymentNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询收付款",
+		Use:   "page",
+		Short: "分页查询收付款记录（type=RECEIPT 收款 / PAYMENT 付款）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -47,8 +91,7 @@ func newFinanceReceiptPaymentListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectStringFlags(cmd, params, "receipt-payment-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeReceiptPaymentFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/page", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("查询收付款失败: %s", err), "")
@@ -58,12 +101,30 @@ func newFinanceReceiptPaymentListCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&receiptPaymentNo, "receipt-payment-no", "", "收付款单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeReceiptPaymentFilters)
+	return c
+}
+
+// ---- 分页计数 ----
+
+func newFinanceReceiptPaymentPageCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "page-count",
+		Short: "按筛选统计收付款记录数量",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeReceiptPaymentPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计收付款失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	addFinanceFilterFlags(c, financeReceiptPaymentPageCountFilters)
 	return c
 }
 
@@ -209,31 +270,31 @@ func newFinanceReceiptPaymentSummaryCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/summary", nil)
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeReceiptPaymentPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/summary", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("获取收付款汇总失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
+	addFinanceFilterFlags(c, financeReceiptPaymentPageCountFilters)
 	return c
 }
 
 // ---- 导出 Excel ----
 
 func newFinanceReceiptPaymentExportExcelCmd() *cobra.Command {
-	var receiptPaymentNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
 		Use:   "export",
-		Short: "导出收付款 Excel",
+		Short: "导出收付款记录 Excel",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "receipt-payment-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeReceiptPaymentFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/export-excel", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("导出收付款失败: %s", err), "")
@@ -242,11 +303,6 @@ func newFinanceReceiptPaymentExportExcelCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&receiptPaymentNo, "receipt-payment-no", "", "收付款单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeReceiptPaymentFilters)
 	return c
 }

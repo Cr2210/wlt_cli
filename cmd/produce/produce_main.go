@@ -19,7 +19,7 @@ var produceMainCmd = &cobra.Command{
 func init() {
 	produceCmd.AddCommand(produceMainCmd)
 	produceMainCmd.AddCommand(
-		newProduceMainListCmd(),
+		newProduceMainPageCmd(),
 		newProduceMainPageCountCmd(),
 		newProduceMainGetCmd(),
 		newProduceMainCreateCmd(),
@@ -35,13 +35,11 @@ func init() {
 
 // ---- 分页查询 ----
 
-func newProduceMainListCmd() *cobra.Command {
+func newProduceMainPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var produceNo, status, warehouseId, productId string
-
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询生产单",
+		Use:   "page",
+		Short: "分页查询生产任务",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -50,50 +48,140 @@ func newProduceMainListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectStringFlags(cmd, params, "produce-no", "status", "warehouse-id", "product-id")
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"project-name",
+				"status",
+				"produce-time",
+				"batch-no",
+				"metrics-name",
+				"warehouse-id",
+				"warehouse-name",
+				"product-id",
+				"product-name",
+				"plan-no",
+				"plan-name",
+				"user-id",
+				"user-name",
+				"order-id",
+				"order-no",
+				"remark",
+				"creator",
+				"creator-name",
+				"create-time",
+				"update-time",
+				"updater-name",
+				"custom-order",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/page", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询生产单失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("查询生产任务失败: %s", err), "")
 			}
 			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
 		},
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&produceNo, "produce-no", "", "生产单号")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
+	c.Flags().String("no", "", "生产编号")
+	c.Flags().String("project-name", "", "项目名称")
+	c.Flags().String("status", "", "出库状态")
+	c.Flags().String("produce-time", "", "生产日期")
+	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("warehouse-id", "", "仓库编号")
+	c.Flags().String("warehouse-name", "", "仓库名称")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("plan-name", "", "方案名称")
+	c.Flags().String("user-id", "", "操作人员")
+	c.Flags().String("user-name", "", "操作人员名称")
+	c.Flags().String("order-id", "", "订单编号")
+	c.Flags().String("order-no", "", "订单号")
+	c.Flags().String("remark", "", "备注")
+	c.Flags().String("creator", "", "创建者")
+	c.Flags().String("creator-name", "", "创建人名称")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("updater-name", "", "更新人名称")
+	c.Flags().String("custom-order", "", "前端自定义排序规则")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
 
 // ---- 分页计数 ----
 
 func newProduceMainPageCountCmd() *cobra.Command {
-	var produceNo, status, warehouseId, productId string
-
 	c := &cobra.Command{
 		Use:   "page-count",
-		Short: "统计生产单数量",
+		Short: "按筛选统计生产任务数量",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "produce-no", "status", "warehouse-id", "product-id")
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"project-name",
+				"status",
+				"produce-time",
+				"batch-no",
+				"metrics-name",
+				"warehouse-id",
+				"warehouse-name",
+				"product-id",
+				"product-name",
+				"plan-no",
+				"plan-name",
+				"user-id",
+				"user-name",
+				"order-id",
+				"order-no",
+				"remark",
+				"creator",
+				"creator-name",
+				"create-time",
+				"update-time",
+				"updater-name",
+				"custom-order",
+				"keyword",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/page-count", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计生产单数量失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("统计生产任务失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	c.Flags().StringVar(&produceNo, "produce-no", "", "生产单号")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
+	c.Flags().String("no", "", "生产编号")
+	c.Flags().String("project-name", "", "项目名称")
+	c.Flags().String("status", "", "出库状态")
+	c.Flags().String("produce-time", "", "生产日期")
+	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("warehouse-id", "", "仓库编号")
+	c.Flags().String("warehouse-name", "", "仓库名称")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("plan-name", "", "方案名称")
+	c.Flags().String("user-id", "", "操作人员")
+	c.Flags().String("user-name", "", "操作人员名称")
+	c.Flags().String("order-id", "", "订单编号")
+	c.Flags().String("order-no", "", "订单号")
+	c.Flags().String("remark", "", "备注")
+	c.Flags().String("creator", "", "创建者")
+	c.Flags().String("creator-name", "", "创建人名称")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("updater-name", "", "更新人名称")
+	c.Flags().String("custom-order", "", "前端自定义排序规则")
+	c.Flags().String("keyword", "", "关键字")
 	return c
 }
 
@@ -232,30 +320,75 @@ func newProduceMainUpdateStatusCmd() *cobra.Command {
 // ---- 导出 Excel ----
 
 func newProduceMainExportExcelCmd() *cobra.Command {
-	var produceNo, status, warehouseId, productId string
-
 	c := &cobra.Command{
 		Use:   "export",
-		Short: "导出生产单 Excel",
+		Short: "导出生产任务 Excel",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "produce-no", "status", "warehouse-id", "product-id")
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"project-name",
+				"status",
+				"produce-time",
+				"batch-no",
+				"metrics-name",
+				"warehouse-id",
+				"warehouse-name",
+				"product-id",
+				"product-name",
+				"plan-no",
+				"plan-name",
+				"user-id",
+				"user-name",
+				"order-id",
+				"order-no",
+				"remark",
+				"creator",
+				"creator-name",
+				"create-time",
+				"update-time",
+				"updater-name",
+				"custom-order",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/export-excel", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出生产单失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("导出生产任务失败: %s", err), "")
 			}
 			fmt.Println("导出成功，返回数据：", string(resp.Data))
 			return nil
 		},
 	}
-	c.Flags().StringVar(&produceNo, "produce-no", "", "生产单号")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&warehouseId, "warehouse-id", "", "仓库 ID")
-	c.Flags().StringVar(&productId, "product-id", "", "产品 ID")
+	c.Flags().String("no", "", "生产编号")
+	c.Flags().String("project-name", "", "项目名称")
+	c.Flags().String("status", "", "出库状态")
+	c.Flags().String("produce-time", "", "生产日期")
+	c.Flags().String("batch-no", "", "批次号")
+	c.Flags().String("metrics-name", "", "指标名称")
+	c.Flags().String("warehouse-id", "", "仓库编号")
+	c.Flags().String("warehouse-name", "", "仓库名称")
+	c.Flags().String("product-id", "", "产品编号")
+	c.Flags().String("product-name", "", "产品名称")
+	c.Flags().String("plan-no", "", "方案号")
+	c.Flags().String("plan-name", "", "方案名称")
+	c.Flags().String("user-id", "", "操作人员")
+	c.Flags().String("user-name", "", "操作人员名称")
+	c.Flags().String("order-id", "", "订单编号")
+	c.Flags().String("order-no", "", "订单号")
+	c.Flags().String("remark", "", "备注")
+	c.Flags().String("creator", "", "创建者")
+	c.Flags().String("creator-name", "", "创建人名称")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("updater-name", "", "更新人名称")
+	c.Flags().String("custom-order", "", "前端自定义排序规则")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
 
@@ -263,11 +396,9 @@ func newProduceMainExportExcelCmd() *cobra.Command {
 
 func newProduceMainQualityPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var produceId string
-
 	c := &cobra.Command{
 		Use:   "quality-page",
-		Short: "分页查询生产单质检",
+		Short: "分页查询生产质检",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -276,76 +407,190 @@ func newProduceMainQualityPageCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			if produceId != "" {
-				params["produceId"] = produceId
-			}
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"produce-time",
+				"product-name",
+				"metrics-name",
+				"inspection-nos-str",
+				"inspection-result",
+				"warehouse-name",
+				"plan-name",
+				"user-name",
+				"project-name",
+				"plan-no",
+				"order-no",
+				"batch-no",
+				"remark",
+				"status",
+				"creator",
+				"create-time",
+				"updater",
+				"update-time",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/quality-page", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询生产单质检失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("查询生产质检失败: %s", err), "")
 			}
 			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
 		},
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&produceId, "produce-id", "", "生产单 ID")
+	c.Flags().String("no", "", "生产任务编号")
+	c.Flags().String("produce-time", "", "生产日期")
+	c.Flags().String("product-name", "", "货物名称")
+	c.Flags().String("metrics-name", "", "规格指标")
+	c.Flags().String("inspection-nos-str", "", "关联质检单编号")
+	c.Flags().String("inspection-result", "", "质检结果")
+	c.Flags().String("warehouse-name", "", "仓库名称")
+	c.Flags().String("plan-name", "", "方案名称")
+	c.Flags().String("user-name", "", "业务负责人")
+	c.Flags().String("project-name", "", "项目名称")
+	c.Flags().String("plan-no", "", "关联方案编号")
+	c.Flags().String("order-no", "", "关联销售订单")
+	c.Flags().String("batch-no", "", "批次编号")
+	c.Flags().String("remark", "", "备注")
+	c.Flags().String("status", "", "审核状态")
+	c.Flags().String("creator", "", "创建人")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("updater", "", "更新人")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
 
 // ---- 质检计数 ----
 
 func newProduceMainQualityCountCmd() *cobra.Command {
-	var produceId string
-
 	c := &cobra.Command{
 		Use:   "quality-count",
-		Short: "统计生产单质检数量",
+		Short: "按筛选统计生产质检数量",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			if produceId != "" {
-				params["produceId"] = produceId
-			}
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"produce-time",
+				"product-name",
+				"metrics-name",
+				"inspection-nos-str",
+				"inspection-result",
+				"warehouse-name",
+				"plan-name",
+				"user-name",
+				"project-name",
+				"plan-no",
+				"order-no",
+				"batch-no",
+				"remark",
+				"status",
+				"creator",
+				"create-time",
+				"updater",
+				"update-time",
+				"keyword",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/quality-count", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计质检数量失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("统计生产质检失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	c.Flags().StringVar(&produceId, "produce-id", "", "生产单 ID")
+	c.Flags().String("no", "", "生产任务编号")
+	c.Flags().String("produce-time", "", "生产日期")
+	c.Flags().String("product-name", "", "货物名称")
+	c.Flags().String("metrics-name", "", "规格指标")
+	c.Flags().String("inspection-nos-str", "", "关联质检单编号")
+	c.Flags().String("inspection-result", "", "质检结果")
+	c.Flags().String("warehouse-name", "", "仓库名称")
+	c.Flags().String("plan-name", "", "方案名称")
+	c.Flags().String("user-name", "", "业务负责人")
+	c.Flags().String("project-name", "", "项目名称")
+	c.Flags().String("plan-no", "", "关联方案编号")
+	c.Flags().String("order-no", "", "关联销售订单")
+	c.Flags().String("batch-no", "", "批次编号")
+	c.Flags().String("remark", "", "备注")
+	c.Flags().String("status", "", "审核状态")
+	c.Flags().String("creator", "", "创建人")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("updater", "", "更新人")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("keyword", "", "关键字")
 	return c
 }
 
 // ---- 导出质检 Excel ----
 
 func newProduceMainQualityExportExcelCmd() *cobra.Command {
-	var produceId string
-
 	c := &cobra.Command{
 		Use:   "quality-export",
-		Short: "导出生产单质检 Excel",
+		Short: "导出生产质检 Excel",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
 			params := map[string]any{}
-			if produceId != "" {
-				params["produceId"] = produceId
-			}
+			cmdutil.CollectStringFlags(cmd, params,
+				"no",
+				"produce-time",
+				"product-name",
+				"metrics-name",
+				"inspection-nos-str",
+				"inspection-result",
+				"warehouse-name",
+				"plan-name",
+				"user-name",
+				"project-name",
+				"plan-no",
+				"order-no",
+				"batch-no",
+				"remark",
+				"status",
+				"creator",
+				"create-time",
+				"updater",
+				"update-time",
+				"keyword",
+				"headers",
+			)
 
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/quality-export-excel", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出质检失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("导出生产质检失败: %s", err), "")
 			}
 			fmt.Println("导出成功，返回数据：", string(resp.Data))
 			return nil
 		},
 	}
-	c.Flags().StringVar(&produceId, "produce-id", "", "生产单 ID")
+	c.Flags().String("no", "", "生产任务编号")
+	c.Flags().String("produce-time", "", "生产日期")
+	c.Flags().String("product-name", "", "货物名称")
+	c.Flags().String("metrics-name", "", "规格指标")
+	c.Flags().String("inspection-nos-str", "", "关联质检单编号")
+	c.Flags().String("inspection-result", "", "质检结果")
+	c.Flags().String("warehouse-name", "", "仓库名称")
+	c.Flags().String("plan-name", "", "方案名称")
+	c.Flags().String("user-name", "", "业务负责人")
+	c.Flags().String("project-name", "", "项目名称")
+	c.Flags().String("plan-no", "", "关联方案编号")
+	c.Flags().String("order-no", "", "关联销售订单")
+	c.Flags().String("batch-no", "", "批次编号")
+	c.Flags().String("remark", "", "备注")
+	c.Flags().String("status", "", "审核状态")
+	c.Flags().String("creator", "", "创建人")
+	c.Flags().String("create-time", "", "创建时间")
+	c.Flags().String("updater", "", "更新人")
+	c.Flags().String("update-time", "", "更新时间")
+	c.Flags().String("keyword", "", "关键字")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }

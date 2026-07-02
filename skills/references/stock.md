@@ -56,6 +56,18 @@
 | `wlt stock record get --id <N>` | 获取出入库明细详情 | `--id`（必填） |
 | `wlt stock record count` | 获取出入库明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
 
+## 出库单 (`wlt stock out`)
+
+| 命令 | 说明 | 关键参数 |
+|------|------|---------|
+| `wlt stock out page` | 分页查询出库单 | `--page-no`, `--page-size`, `--no`, `--customer-id`, `--customer-name`, `--out-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock out page-count` | 按筛选统计出库单数量 | 同 `out page`（去 `--headers`） |
+| `wlt stock out get --id <N>` | 获取出库单详情 | `--id`（必填） |
+| `wlt stock out create --data '<json>'` | 创建出库单 | `--data`（必填） |
+| `wlt stock out update --data '<json>'` | 更新出库单 | `--data`（必填） |
+| `wlt stock out delete --ids <id1,id2>` | 删除出库单 | `--ids`（必填） |
+| `wlt stock out update-status --data '<json>'` | 更新出库单状态 | `--data`（必填，含 id 和 status） |
+
 ## 常见工作流
 
 ### 查询某仓库库存

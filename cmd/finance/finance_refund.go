@@ -14,7 +14,8 @@ import (
 func init() {
 	financeCmd.AddCommand(financeRefundCmd)
 	financeRefundCmd.AddCommand(
-		newFinanceRefundListCmd(),
+		newFinanceRefundPageCmd(),
+		newFinanceRefundPageCountCmd(),
 		newFinanceRefundGetCmd(),
 		newFinanceRefundCreateCmd(),
 		newFinanceRefundUpdateCmd(),
@@ -30,15 +31,62 @@ var financeRefundCmd = &cobra.Command{
 	Short: "退款单管理",
 }
 
+// financeRefundFilters 包含所有可筛选字段（含 headers，用于 page / export）。
+// 供应商退款: type=SUPPLIER_REFUND
+// 客户退款: type=CUSTOMER_REFUND
+var financeRefundFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "退款单编号"},
+	{Name: "type", Usage: "业务类别(SUPPLIER_REFUND=供应商退款/CUSTOMER_REFUND=客户退款/...)"},
+	{Name: "pay-date", Usage: "付款日期"},
+	{Name: "account-id", Usage: "账户 ID"},
+	{Name: "account-name", Usage: "账户名称"},
+	{Name: "account-no", Usage: "账户账号"},
+	{Name: "partner-id", Usage: "供应商/客户 ID"},
+	{Name: "partner-name", Usage: "供应商/客户名称"},
+	{Name: "service-user-id", Usage: "财务负责人 ID"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "status", Usage: "核销状态(NOT_WRITE_OFF/PARTIAL_WRITE_OFF/FULLY_WRITE_OFF)"},
+	{Name: "approve-status", Usage: "审核状态"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "keyword", Usage: "关键字搜索(退款单编号/账户/供应商/客户)"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "headers", Usage: "自定义导出表头"},
+}
+
+// financeRefundPageCountFilters 去掉了 headers。
+var financeRefundPageCountFilters = []cmdutil.FlagSpec{
+	{Name: "no", Usage: "退款单编号"},
+	{Name: "type", Usage: "业务类别(SUPPLIER_REFUND=供应商退款/CUSTOMER_REFUND=客户退款/...)"},
+	{Name: "pay-date", Usage: "付款日期"},
+	{Name: "account-id", Usage: "账户 ID"},
+	{Name: "account-name", Usage: "账户名称"},
+	{Name: "account-no", Usage: "账户账号"},
+	{Name: "partner-id", Usage: "供应商/客户 ID"},
+	{Name: "partner-name", Usage: "供应商/客户名称"},
+	{Name: "service-user-id", Usage: "财务负责人 ID"},
+	{Name: "service-user-name", Usage: "财务负责人名称"},
+	{Name: "status", Usage: "核销状态(NOT_WRITE_OFF/PARTIAL_WRITE_OFF/FULLY_WRITE_OFF)"},
+	{Name: "approve-status", Usage: "审核状态"},
+	{Name: "remark", Usage: "备注"},
+	{Name: "creator-name", Usage: "创建人"},
+	{Name: "updater-name", Usage: "更新人"},
+	{Name: "create-time", Usage: "创建时间"},
+	{Name: "update-time", Usage: "更新时间"},
+	{Name: "keyword", Usage: "关键字搜索(退款单编号/账户/供应商/客户)"},
+	{Name: "custom-order", Usage: "前端自定义排序规则"},
+}
+
 // ---- 分页查询 ----
 
-func newFinanceRefundListCmd() *cobra.Command {
+func newFinanceRefundPageCmd() *cobra.Command {
 	var pageNo, pageSize int
-	var refundNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询退款单",
+		Use:   "page",
+		Short: "分页查询退款单(type=SUPPLIER_REFUND 供应商退款 / CUSTOMER_REFUND 客户退款)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
@@ -47,8 +95,7 @@ func newFinanceRefundListCmd() *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			cmdutil.CollectStringFlags(cmd, params, "refund-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeRefundFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/page", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("查询退款单失败: %s", err), "")
@@ -58,12 +105,30 @@ func newFinanceRefundListCmd() *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&refundNo, "refund-no", "", "退款单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeRefundFilters)
+	return c
+}
+
+// ---- 分页计数 ----
+
+func newFinanceRefundPageCountCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "page-count",
+		Short: "按筛选统计退款单数量",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeRefundPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/page-count", params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("统计退款单失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	addFinanceFilterFlags(c, financeRefundPageCountFilters)
 	return c
 }
 
@@ -71,23 +136,34 @@ func newFinanceRefundListCmd() *cobra.Command {
 
 func newFinanceRefundGetCmd() *cobra.Command {
 	var id int64
+	var no string
 
 	c := &cobra.Command{
 		Use:   "get",
-		Short: "获取退款单详情",
+		Short: "获取退款单详情（id 或 no 任选其一）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/get", map[string]any{"id": id})
+			params := map[string]any{}
+			if id > 0 {
+				params["id"] = id
+			}
+			if no != "" {
+				params["no"] = no
+			}
+			if len(params) == 0 {
+				return output.NewExitError(4, "请指定 --id 或 --no", "")
+			}
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/get", params)
 			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("获取退款单失败: %s", err), "")
+				return output.NewExitError(5, fmt.Sprintf("获取退款单详情失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
 	c.Flags().Int64Var(&id, "id", 0, "退款单 ID")
-	_ = c.MarkFlagRequired("id")
+	c.Flags().StringVar(&no, "no", "", "退款单编号")
 	return c
 }
 
@@ -204,26 +280,27 @@ func newFinanceRefundUpdateStatusCmd() *cobra.Command {
 func newFinanceRefundSummaryCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "summary",
-		Short: "获取退款单汇总数据",
+		Short: "获取退款单汇总数据（支持按筛选条件）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/summary", nil)
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financeRefundPageCountFilters)
+			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/summary", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("获取退款单汇总失败: %s", err), "")
 			}
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
+	addFinanceFilterFlags(c, financeRefundPageCountFilters)
 	return c
 }
 
 // ---- 导出 Excel ----
 
 func newFinanceRefundExportExcelCmd() *cobra.Command {
-	var refundNo, customerId, supplierId, status, accountId, reviewerId string
-
 	c := &cobra.Command{
 		Use:   "export",
 		Short: "导出退款单 Excel",
@@ -232,8 +309,7 @@ func newFinanceRefundExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectStringFlags(cmd, params, "refund-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
+			collectFinanceFilters(cmd, params, financeRefundFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/export-excel", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("导出退款单失败: %s", err), "")
@@ -242,11 +318,6 @@ func newFinanceRefundExportExcelCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&refundNo, "refund-no", "", "退款单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
+	addFinanceFilterFlags(c, financeRefundFilters)
 	return c
 }

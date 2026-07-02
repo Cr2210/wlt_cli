@@ -35,16 +35,20 @@
 
 ## 退款单 (`wlt finance refund`)
 
+> 供应商退款: `type=SUPPLIER_REFUND`
+> 客户退款: `type=CUSTOMER_REFUND`
+
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt finance refund list` | 分页查询退款 | `--refund-no`, `--customer-id`, `--supplier-id`, `--status`, `--account-id`, `--reviewer-id`, `--page-no`, `--page-size` |
-| `wlt finance refund get --id <N>` | 获取退款详情 | `--id`（必填） |
+| `wlt finance refund page` | 分页查询退款单 | `--page-no`, `--page-size`, `--no`, `--type`, `--pay-date`, `--account-id`, `--account-name`, `--account-no`, `--partner-id`, `--partner-name`, `--service-user-id`, `--service-user-name`, `--status`, `--approve-status`, `--remark`, `--creator-name`, `--updater-name`, `--create-time`, `--update-time`, `--keyword`, `--custom-order`, `--headers` |
+| `wlt finance refund page-count` | 按筛选统计退款单数量 | 同 `refund page`（去 `--headers`） |
+| `wlt finance refund get` | 获取退款单详情 | `--id` 或 `--no`（任选其一） |
 | `wlt finance refund create --data '<json>'` | 创建退款 | `--data`（必填） |
 | `wlt finance refund update --data '<json>'` | 更新退款 | `--data`（必填） |
 | `wlt finance refund delete --id <N>` | 删除退款 | `--id`（必填） |
 | `wlt finance refund update-status --data '<json>'` | 更新退款状态 | `--data`（必填） |
-| `wlt finance refund summary` | 退款汇总 | 无 |
-| `wlt finance refund export` | 导出 Excel | `--refund-no`, `--customer-id`, `--supplier-id`, `--status`, `--account-id`, `--reviewer-id` |
+| `wlt finance refund summary` | 获取退款单合计（返回 totalCount/unSettledCount/partSettledCount/settledCount/totalAmount/checkedAmount/unCheckedAmount，支持同 `page-count` 的筛选） | 同 `refund page-count` |
+| `wlt finance refund export` | 导出退款单 Excel | 同 `refund page` |
 
 ## 财务结算 (`wlt finance settlement`)
 

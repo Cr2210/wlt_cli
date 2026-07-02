@@ -147,7 +147,6 @@ wlt order plan export [--no ...] [--product-id ...] [--supplier-id ...] [--custo
 
 ```bash
 wlt order main create --data '{"orderNo":"ORD-001","customerId":1,...}'
-wlt waybill source create --data '{"waybillNo":"WB-001",...}'
 wlt order main link-waybill --data '{"orderId":1,"waybillId":1}'
 ```
 

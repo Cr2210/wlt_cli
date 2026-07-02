@@ -223,12 +223,19 @@ wlt finance receipt list --customer-id 1           # 查看客户收款
 wlt finance payment list --supplier-id 1           # 查看供应商付款
 ```
 
-### 4. 运单签收
+### 4. 运单生命周期(查询 → 装车 → 卸车 → 签收)
 
 ```bash
-wlt waybill source list --status 1                 # 查询在途运单
-wlt waybill source sign --data '{"id":...}'        # 签收
-wlt waybill source batch-sign --ids 1,2,3          # 批量签收
+# 查询(状态自检友好)
+wlt waybill get --id 1001 --token <t> --tenant-id <T>             # 取详情,确认运单状态
+wlt waybill page --status 1 --token <t> --tenant-id <T>           # 查询在途运单（--status 示例）
+wlt waybill page --waybill-no <YD...> --token <t> --tenant-id <T> # 按运单号查
+
+# 写入操作(分别对应 UN_LOAD / ON_LOAD 状态)
+wlt waybill load --waybill-id 1001 --load-time "2026-07-02 08:00:00" --load-weight 25.6 --token <t> --tenant-id <T>
+wlt waybill unload --waybill-id 1001 --unload-time "2026-07-02 18:00:00" --unload-weight 25.4 --token <t> --tenant-id <T>
+# 批量签收(运单数组 — 单条/逗号分隔 ID 三种姿势)
+wlt waybill sign-batch --waybill-id 1001,1002,1003 --sign-time "2026-07-02 20:00:00" --token <t> --tenant-id <T>
 ```
 
 ### 5. 生产质检
@@ -262,7 +269,7 @@ wlt report stock detail --warehouse-id 1 --start-time 2024-01-01  # 库存报表
 | `finance` | `account delete` / 所有 delete | 删除财务单据 |
 | `order` | `delete` / `cancel` | 删除/取消订单 |
 | `produce` | `delete` | 删除生产单 |
-| `waybill` | `delete` / `delete-list` | 删除运单 |
+| `waybill` | `load` / `unload` / `sign-batch` | 装货 / 卸货 / 批量签收（写操作） |
 | `system` | `user/dept/role/menu delete` | 删除系统资源 |
 
 ### 确认流程
@@ -321,7 +328,7 @@ Step 3 → 执行命令
 - `quality inspection relate-list --business-type <类型> --business-id <ID>`
 
 ### ❌ 当前不可用（后端异常或权限）
-- **后端 404/500**：`waybill source list/page-count`、`system role list`、`system dict type-list/data-list`、`stock record count`、`operate-log list`
+- **后端 404/500**：`system role list`、`system dict type-list/data-list`、`stock record count`、`operate-log list`
 - **权限 403**：`sale return list`、`purchase return list`、`system menu list`、`data-sync list`
 - **命令未注册**：`supplier credit *`（客户有 credit，供应商未实现；`supplier --help` 误列）
 

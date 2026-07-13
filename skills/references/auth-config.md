@@ -62,7 +62,7 @@ profiles:
     enterprise_type: ""
   prod:
     base_url: https://erpapi.w-lian.com
-    api_prefix: /admin-api
+    api_prefix: /weiliantong/admin-api
     enterprise_type: ""
 ```
 

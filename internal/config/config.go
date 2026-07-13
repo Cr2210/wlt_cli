@@ -188,7 +188,7 @@ func defaultConfig() *Config {
 			},
 			"prod": {
 				BaseURL:   "https://erpapi.w-lian.com",
-				APIPrefix: "/admin-api",
+				APIPrefix: "/weiliantong/admin-api",
 			},
 		},
 	}

@@ -5,7 +5,7 @@
 ### 基础路径
 
 - **SIT 环境**: `https://erpsit.api.w-lian.com/admin-api`
-- **生产环境**: `https://erpapi.w-lian.com/admin-api`
+- **生产环境**: `https://erpapi.w-lian.com/weiliantong/admin-api`
 - **本地开发**: `http://localhost:50000/admin-api`（dev/local profile）
 
 ### 统一响应格式 `CommonResult<T>`

@@ -61,8 +61,7 @@ internal/
 │   ├── client.go       #   EnsureClient(), InitManagers(), GetClient(), SetAuthFlags()
 │   ├── helpers.go      #   ParseJSONData, CollectStringFlag/Flags, CollectIntFlags
 │   ├── output.go       #   OutputJSON, OutputPagedJSON, OutputRaw, ParsePagedJSON
-│   ├── crud.go         #   CRUDConfig, NewCRUDGroup, AddCRUDToParent + 工厂函数
-│   ├── crud_legacy.go  #   NewCRUDSubCmd（库存/采购/销售子域通用 CRUD）
+│   ├── crud.go         #   CRUDConfig, NewCRUDGroup, AddCRUDToParent, DocumentCmds + 工厂函数
 │   └── stats.go        #   NewStatsGetCmd, CollectTimeRangeFlags, AddStatsFlags
 ├── config/             # 配置文件管理（~/.wlt/config.yaml）
 └── output/             # JSON 输出格式化（stdout/stderr 分离）
@@ -76,8 +75,8 @@ skills/                 # AI Agent Skills Markdown
 - **命令注册**：子命令在各自文件中通过 `init()` 注册到父命令变量，`root.go` 调用每个包的 `Register()`
 - **输出协议**：stdout 数据 JSON / stderr 错误 JSON / 退出码 0-6
 - **CRUD 模式**：
-  - 现代：`cmdutil.AddCRUDToParent(parent, CRUDConfig{...})` — 大多数域使用
-  - 遗留：`cmdutil.NewCRUDSubCmd(name, apiPath, label)` — 库存/采购/销售子域使用
+  - 通用单据：`cmdutil.DocumentCmds(parent, DocumentConfig{...})` — 单据类（采购入库/销售出库/其他入库/出库/调拨/盘点/退货）
+  - 标准 CRUD：`cmdutil.AddCRUDToParent(parent, CRUDConfig{...})` — 大多数域使用
 - **共享逻辑**：`cmd/partner/` 包封装了客户/供应商共享的 CRUD、开票、结算、授信逻辑
 
 ## 后端 API 约定

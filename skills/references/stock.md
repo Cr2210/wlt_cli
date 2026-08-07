@@ -25,10 +25,12 @@
 
 ## 入库单 (`wlt stock in`)
 
+> 单据类命令（in/out/move/check）分页子命令统一为 `list`，`page` 保留为兼容别名（`wlt stock in page` 仍可用）。时间筛选统一为 `--start-time`/`--end-time`（转后端 `inTime[0]`/`inTime[1]` 数组）。
+
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock in page` | 分页查询入库单 | `--page-no`, `--page-size`, `--no`, `--supplier-id`, `--supplier-name`, `--in-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
-| `wlt stock in page-count` | 按筛选统计入库单数量 | 同 `in page`（去 `--headers`） |
+| `wlt stock in list`（`page` 别名） | 分页查询入库单 | `--page-no`, `--page-size`, `--no`, `--supplier-id`, `--supplier-name`, `--start-time`, `--end-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock in page-count` | 按筛选统计入库单数量 | 同 `in list`（去 `--headers`） |
 | `wlt stock in get --id <N>` | 获取入库单详情 | `--id`（必填） |
 | `wlt stock in create --data '<json>'` | 创建入库单 | `--data`（必填） |
 | `wlt stock in update --data '<json>'` | 更新入库单 | `--data`（必填） |
@@ -60,8 +62,8 @@
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock move page` | 分页查询调拨单 | `--page-no`, `--page-size`, `--no`, `--move-time`, `--create-time`, `--update-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--updater`, `--updater-name`, `--product-id`, `--from-warehouse-id`, `--to-warehouse-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
-| `wlt stock move page-count` | 按筛选统计调拨单数量 | 同 `move page`（去 `--headers`） |
+| `wlt stock move list`（`page` 别名） | 分页查询调拨单 | `--page-no`, `--page-size`, `--no`, `--start-time`, `--end-time`, `--create-time`, `--update-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--updater`, `--updater-name`, `--product-id`, `--from-warehouse-id`, `--to-warehouse-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock move page-count` | 按筛选统计调拨单数量 | 同 `move list`（去 `--headers`） |
 | `wlt stock move get --id <N>` | 获取调拨单详情 | `--id`（必填） |
 | `wlt stock move create --data '<json>'` | 创建调拨单 | `--data`（必填） |
 | `wlt stock move update --data '<json>'` | 更新调拨单 | `--data`（必填） |
@@ -72,8 +74,8 @@
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock check page` | 分页查询盘点单 | `--page-no`, `--page-size`, `--no`, `--warehouse-id`, `--check-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--create-time`, `--update-time`, `--updater`, `--updater-name`, `--product-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
-| `wlt stock check page-count` | 按筛选统计盘点单数量 | 同 `check page`（去 `--headers`） |
+| `wlt stock check list`（`page` 别名） | 分页查询盘点单 | `--page-no`, `--page-size`, `--no`, `--warehouse-id`, `--start-time`, `--end-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--create-time`, `--update-time`, `--updater`, `--updater-name`, `--product-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock check page-count` | 按筛选统计盘点单数量 | 同 `check list`（去 `--headers`） |
 | `wlt stock check get --id <N>` | 获取盘点单详情 | `--id`（必填） |
 | `wlt stock check create --data '<json>'` | 创建盘点单 | `--data`（必填） |
 | `wlt stock check update --data '<json>'` | 更新盘点单 | `--data`（必填） |
@@ -84,8 +86,8 @@
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock out page` | 分页查询出库单 | `--page-no`, `--page-size`, `--no`, `--customer-id`, `--customer-name`, `--out-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
-| `wlt stock out page-count` | 按筛选统计出库单数量 | 同 `out page`（去 `--headers`） |
+| `wlt stock out list`（`page` 别名） | 分页查询出库单 | `--page-no`, `--page-size`, `--no`, `--customer-id`, `--customer-name`, `--start-time`, `--end-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock out page-count` | 按筛选统计出库单数量 | 同 `out list`（去 `--headers`） |
 | `wlt stock out get --id <N>` | 获取出库单详情 | `--id`（必填） |
 | `wlt stock out create --data '<json>'` | 创建出库单 | `--data`（必填） |
 | `wlt stock out update --data '<json>'` | 更新出库单 | `--data`（必填） |
@@ -112,6 +114,6 @@ wlt stock in create --data '{"warehouseId":1,"items":[{"productId":1,"count":10}
 ### 审核出入库单
 
 ```bash
-wlt stock in page --status 0                       # 查询待审核
+wlt stock in list --status 0                       # 查询待审核（page 仍可用作别名）
 wlt stock in update-status --data '{"id":1,"status":2}' # 审核通过
 ```

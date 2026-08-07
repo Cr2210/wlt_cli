@@ -773,18 +773,18 @@ func orderCommandSlug(use, t string) string {
 	return strings.ToLower(t)
 }
 
-// ---- 采购入库 / 销售出库 变体（含时间范围数组参数 + 模块特有筛选字段） ----
+// ---- 单据 CRUD 工厂（采购入库/销售出库/调拨/盘点/退货等通用） ----
 
-// salePurchaseTimeFlags 是采购/销售共用的起止时间筛选 flag；
-// 实际查询时会被转成 {timeKey}[0] / {timeKey}[1] 数组参数
-// （采购入库为 inTime[0]/inTime[1]，销售出库为 outTime[0]/outTime[1]）。
-var salePurchaseTimeFlags = []FlagSpec{
+// documentTimeFlags 是单据共用的起止时间筛选 flag；
+// 查询时转成 {timeKey}[0] / {timeKey}[1] 数组参数
+// （采购入库 inTime、销售出库 outTime、调拨 moveTime、盘点 checkTime 等）。
+var documentTimeFlags = []FlagSpec{
 	{Name: "start-time", Usage: "开始时间（如 2026-07-01 00:00:00）"},
 	{Name: "end-time", Usage: "结束时间（如 2026-07-31 23:59:59）"},
 }
 
-// collectSalePurchaseTime 把 start-time/end-time 转成 {timeKey}[0]/{timeKey}[1]。
-func collectSalePurchaseTime(cmd *cobra.Command, params map[string]any, timeKey string) {
+// collectDocumentTimeRange 把 start-time/end-time 转成 {timeKey}[0]/{timeKey}[1]。
+func collectDocumentTimeRange(cmd *cobra.Command, params map[string]any, timeKey string) {
 	if v, _ := cmd.Flags().GetString("start-time"); v != "" {
 		params[fmt.Sprintf("%s[0]", timeKey)] = v
 	}
@@ -793,8 +793,8 @@ func collectSalePurchaseTime(cmd *cobra.Command, params map[string]any, timeKey 
 	}
 }
 
-func addSalePurchaseTimeFlags(c *cobra.Command) {
-	for _, f := range salePurchaseTimeFlags {
+func addDocumentTimeRangeFlags(c *cobra.Command) {
+	for _, f := range documentTimeFlags {
 		c.Flags().String(f.Name, "", f.Usage)
 	}
 }
@@ -852,37 +852,27 @@ func AddOrderTimeFlags(c *cobra.Command) {
 	}
 }
 
-// addSalePurchaseBaseFlags 注册采购/销售 list/page-count 共用的筛选 flag。
-// 保留 legacy 已有字段（含 start-time/end-time），并新增 product-name（产品名称模糊搜索）。
-func addSalePurchaseBaseFlags(c *cobra.Command) {
-	c.Flags().String("warehouse-id", "", "仓库 ID")
-	c.Flags().String("product-id", "", "产品 ID")
-	c.Flags().String("product-name", "", "产品名称（模糊搜索）")
-	c.Flags().String("no", "", "单号")
-	c.Flags().String("status", "", "状态")
-	c.Flags().String("type", "", "类型")
+// DocumentConfig 描述一个单据 CRUD 子模块（采购入库/销售出库/其他入库/出库/调拨/盘点/退货）。
+type DocumentConfig struct {
+	Name      string     // 子命令名：in / out / move / check / return …
+	APIPath   string     // 后端根路径：/erp/stock-in
+	Label     string     // 中文标签：入库单
+	Filters   []FlagSpec // 模块特有筛选 flag（含原 base 字段，如 warehouse-id/product-id/no/status/type 等）
+	TimeKey   string     // 时间字段：空=无时间筛选；非空=注册 --start-time/--end-time，传 {TimeKey}[0]/{TimeKey}[1]
+	Headers   bool       // 是否注册 --headers 自定义导出表头
+	PageAlias bool       // 是否给 list 注册 page 别名（向后兼容）
 }
 
-// SalePurchaseConfig 描述一个采购入库或销售出库子模块。
-type SalePurchaseConfig struct {
-	Name    string     // 子命令名（"in" / "out"）
-	APIPath string     // 后端根路径（"/erp/purchase-in" / "/erp/sale-out"）
-	Label   string     // 中文标签（"采购入库" / "销售出库"）
-	TimeKey string     // 时间范围数组参数前缀（"inTime" / "outTime"）
-	Filters []FlagSpec // 模块特有筛选字段（supplier-id / metrics-name / batch-no …）
-}
-
-// SalePurchaseCmds 为采购/销售子模块生成标准 CRUD 子命令：
-// list / page-count / get / create / update / delete / update-status。
-// list/page-count 共享 base flags + 时间范围数组 + cfg.Filters。
-func SalePurchaseCmds(parent *cobra.Command, cfgs ...SalePurchaseConfig) {
+// DocumentCmds 为一组单据子模块生成标准 CRUD 子命令，统一注册到 parent。
+// 每个子模块自动拥有：list(+可选 page 别名) / page-count / get / create / update / delete / update-status。
+func DocumentCmds(parent *cobra.Command, cfgs ...DocumentConfig) {
 	for _, cfg := range cfgs {
 		cmd := &cobra.Command{
 			Use:   cfg.Name,
 			Short: cfg.Label + "管理",
 		}
-		cmd.AddCommand(salePurchaseListCmd(cfg))
-		cmd.AddCommand(salePurchasePageCountCmd(cfg))
+		cmd.AddCommand(documentListCmd(cfg))
+		cmd.AddCommand(documentPageCountCmd(cfg))
 		cmd.AddCommand(CrudGetCmd(cfg.APIPath, cfg.Label))
 		cmd.AddCommand(CrudCreateCmd(cfg.APIPath, cfg.Label))
 		cmd.AddCommand(CrudUpdateCmd(cfg.APIPath, cfg.Label))
@@ -892,11 +882,12 @@ func SalePurchaseCmds(parent *cobra.Command, cfgs ...SalePurchaseConfig) {
 	}
 }
 
-func salePurchaseListCmd(cfg SalePurchaseConfig) *cobra.Command {
+func documentListCmd(cfg DocumentConfig) *cobra.Command {
 	var pageNo, pageSize int
 	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询" + cfg.Label,
+		Use:     "list",
+		Short:   "分页查询" + cfg.Label,
+		Aliases: docPageAlias(cfg.PageAlias),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := EnsureClient(); err != nil {
 				return err
@@ -905,15 +896,14 @@ func salePurchaseListCmd(cfg SalePurchaseConfig) *cobra.Command {
 				"pageNo":   pageNo,
 				"pageSize": pageSize,
 			}
-			// 基本筛选字段
-			CollectStringFlags(cmd, params,
-				"warehouse-id", "product-id", "product-name",
-				"no", "status", "type")
-			// 时间范围（数组格式 inTime[0]/inTime[1] 或 outTime[0]/outTime[1]）
-			collectSalePurchaseTime(cmd, params, cfg.TimeKey)
-			// 模块特有字段
 			for _, f := range cfg.Filters {
 				CollectStringFlag(cmd, params, f.Name)
+			}
+			if cfg.TimeKey != "" {
+				collectDocumentTimeRange(cmd, params, cfg.TimeKey)
+			}
+			if cfg.Headers {
+				CollectStringFlag(cmd, params, "headers")
 			}
 			resp, err := GetClient().Get(context.Background(), cfg.APIPath+"/page", params)
 			if err != nil {
@@ -924,15 +914,19 @@ func salePurchaseListCmd(cfg SalePurchaseConfig) *cobra.Command {
 	}
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	addSalePurchaseBaseFlags(c)
-	addSalePurchaseTimeFlags(c)
 	for _, f := range cfg.Filters {
 		c.Flags().String(f.Name, "", f.Usage)
+	}
+	if cfg.TimeKey != "" {
+		addDocumentTimeRangeFlags(c)
+	}
+	if cfg.Headers {
+		c.Flags().String("headers", "", "自定义导出表头")
 	}
 	return c
 }
 
-func salePurchasePageCountCmd(cfg SalePurchaseConfig) *cobra.Command {
+func documentPageCountCmd(cfg DocumentConfig) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "page-count",
 		Short: "统计" + cfg.Label + "数量",
@@ -941,13 +935,13 @@ func salePurchasePageCountCmd(cfg SalePurchaseConfig) *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			CollectStringFlags(cmd, params,
-				"warehouse-id", "product-id", "product-name",
-				"no", "status", "type")
-			collectSalePurchaseTime(cmd, params, cfg.TimeKey)
 			for _, f := range cfg.Filters {
 				CollectStringFlag(cmd, params, f.Name)
 			}
+			if cfg.TimeKey != "" {
+				collectDocumentTimeRange(cmd, params, cfg.TimeKey)
+			}
+			// page-count 不带 headers（与原实现一致）
 			resp, err := GetClient().Get(context.Background(), cfg.APIPath+"/page-count", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("统计%s失败: %s", cfg.Label, err), "")
@@ -955,12 +949,21 @@ func salePurchasePageCountCmd(cfg SalePurchaseConfig) *cobra.Command {
 			return OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	addSalePurchaseBaseFlags(c)
-	addSalePurchaseTimeFlags(c)
 	for _, f := range cfg.Filters {
 		c.Flags().String(f.Name, "", f.Usage)
 	}
+	if cfg.TimeKey != "" {
+		addDocumentTimeRangeFlags(c)
+	}
 	return c
+}
+
+// docPageAlias 在启用别名时返回 ["page"]，否则 nil。
+func docPageAlias(enabled bool) []string {
+	if enabled {
+		return []string{"page"}
+	}
+	return nil
 }
 
 // ---- Non-paginated list (uses /list endpoint) ----

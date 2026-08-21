@@ -46,7 +46,7 @@
 | 模块 | 待对接端点(path) | 备注 |
 |---|---|---|
 | `invoice-item` | `/erp/invoice-item/list` | 发票明细;可能并入 invoice |
-| `plan-prepayment-relation` | `/available-initials`、`/available-payments`、`/page` | 计划预付关联,新模块 |
+| `plan-prepayment-relation` | `/available-initials`、`/available-payments`、`/page` | 已接入 `wlt order prepayment-relation`（2026-08-21，另含 create/update-amount） |
 | `position` | `/erp/position/get-history-waybill-follow`、`/get-latest-waybill-follow` | 位置服务/轨迹,新模块 |
 | `screen` | `/erp/screen/line`、`/line-price`、`/purchase-enterprise`、`/purchase-in-price`、`/purchase-in-product`、`/settle-amount` | 大屏补 6 个(`cmd/screen/screen.go`) |
 | `system/account` | `/list` + `/getCarDetail`、`/getCarrierDetail`、`/getDriverDetail`、`/getEnterpriseInfo`、`/getLatestWaybillFollow`、`/getWaybill`、`/getWaybillFollow`、`/getWaybillSourceInfo` | ERP 账号绑定,新模块,9 个 |

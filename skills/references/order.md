@@ -8,6 +8,7 @@
 |---|---|
 | `wlt order main` | 主订单：CRUD / 状态管理 / 运单关联 / 导出 |
 | `wlt order plan` | 订单计划：采购计划 + 销售计划（分页） / CRUD / 业务动作 |
+| `wlt order prepayment-relation` | 订单预付关联：关联记录查询 / 创建 / 改金额 / 可用付款单与期初查询 |
 
 ## 主订单 (`wlt order main`)
 
@@ -139,6 +140,32 @@ wlt order plan cancel --data '...'
 wlt order plan reopen --data '...'
 wlt order plan complete --data '...'
 wlt order plan export [--no ...] [--product-id ...] [--supplier-id ...] [--customer-id ...] [--start ...] [--end ...]
+```
+
+## 订单预付关联 (`wlt order prepayment-relation`)
+
+把订单与预付款来源（付款单 / 供应商期初）建立关联并维护关联金额。后端端点 `/erp/order-prepayment-relation`，`relationType` 枚举：`PAYMENT`（付款单）/ `SUPPLIER`（供应商期初）。
+
+| 命令 | 说明 | 关键参数 |
+|------|------|---------|
+| `list` | 分页查询订单的关联记录 | `--order-id`（必填）、`--relation-type`、`--headers`、`--page-no`、`--page-size` |
+| `create` | 创建关联，输出新关联 ID | `--order-id`、`--relation-type`、`--relation-id`、`--relation-amount`（均必填） |
+| `update-amount` | 更新关联金额 | `--id`、`--relation-amount`（均必填） |
+| `available-payments` | 查询供应商可用的付款单（含可用余额） | `--supplier-id`（必填）、`--order-id`、`--biz-date-start`、`--biz-date-end`、`--no`、`--headers`、`--page-no`、`--page-size` |
+| `available-initials` | 查询供应商可用的期初 | 同 `available-payments` |
+
+`list` 响应为裸数组（无 total）；`available-*` 为标准分页结果。金额单位均为元。
+
+```bash
+# 查某订单已关联的预付记录
+wlt order prepayment-relation list --order-id 123
+
+# 查供应商可用付款单余额 → 挑选后创建关联
+wlt order prepayment-relation available-payments --supplier-id 456 --order-id 123
+wlt order prepayment-relation create --order-id 123 --relation-type PAYMENT --relation-id 789 --relation-amount 1000
+
+# 调整关联金额
+wlt order prepayment-relation update-amount --id 1 --relation-amount 800
 ```
 
 ## 常见工作流

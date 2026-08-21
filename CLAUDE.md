@@ -41,7 +41,7 @@ cmd/                    # Cobra 命令层，每个业务域一个独立 Go 包
 ├── stats/              # 数据总览（overview/finance/purchase/sale/produce/stock）
 ├── finance/            # 财务管理（account/payment/receipt/refund/settlement/write-off/invoice-apply）
 ├── waybill/            # 运单管理（source/push-config）
-├── order/              # 订单管理（main/plan）
+├── order/              # 订单管理（main/plan/prepayment-relation）
 ├── produce/            # 生产管理（main/plan）
 ├── quality/            # 质检管理（inspection/weight）
 ├── weight/             # 称重管理（waybill）

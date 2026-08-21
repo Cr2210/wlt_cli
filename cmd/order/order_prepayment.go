@@ -25,6 +25,8 @@ func init() {
 		newOrderPrepayRelationListCmd(),
 		newOrderPrepayRelationCreateCmd(),
 		newOrderPrepayRelationUpdateAmountCmd(),
+		newPrepayAvailableCmd("available-payments", "查询可用的付款单列表"),
+		newPrepayAvailableCmd("available-initials", "查询可用的供应商期初列表"),
 	)
 }
 
@@ -128,5 +130,43 @@ func newOrderPrepayRelationUpdateAmountCmd() *cobra.Command {
 	c.Flags().Float64Var(&relationAmount, "relation-amount", 0, "关联预付金额（单位：元）")
 	_ = c.MarkFlagRequired("id")
 	_ = c.MarkFlagRequired("relation-amount")
+	return c
+}
+
+// ---- 可用付款单 / 供应商期初查询（共享工厂，flag 与响应结构一致） ----
+
+func newPrepayAvailableCmd(name, label string) *cobra.Command {
+	var supplierId int64
+	var pageNo, pageSize int
+	c := &cobra.Command{
+		Use:   name,
+		Short: label,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			params := map[string]any{
+				"supplierId": supplierId,
+				"pageNo":     pageNo,
+				"pageSize":   pageSize,
+			}
+			cmdutil.CollectIntFlags(cmd, params, "order-id")
+			cmdutil.CollectStringFlags(cmd, params, "biz-date-start", "biz-date-end", "no", "headers")
+			resp, err := cmdutil.GetClient().Get(context.Background(), orderPrepaymentRelationAPIPath+"/"+name, params)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("%s失败: %s", label, err), "")
+			}
+			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
+		},
+	}
+	c.Flags().Int64Var(&supplierId, "supplier-id", 0, "供应商 ID")
+	_ = c.MarkFlagRequired("supplier-id")
+	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
+	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
+	c.Flags().Int64("order-id", 0, "当前订单 ID（排除已关联的）")
+	c.Flags().String("biz-date-start", "", "单据日期起（如 2026-07-01 00:00:00）")
+	c.Flags().String("biz-date-end", "", "单据日期止（如 2026-07-31 23:59:59）")
+	c.Flags().String("no", "", "付款单号/期初编号模糊查询")
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }

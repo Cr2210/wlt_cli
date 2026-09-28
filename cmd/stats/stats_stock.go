@@ -32,7 +32,7 @@ func newStatsStockCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectTimeRangeFlags(cmd, params)
+			cmdutil.CollectStatsFlags(cmd, params)
 			for _, f := range dashboard6Flags {
 				cmdutil.CollectStringFlag(cmd, params, f.Name)
 			}

@@ -21,7 +21,7 @@ func NewStatsGetCmd(name, apiPath, label string, extraFlags []FlagSpec) *cobra.C
 				return err
 			}
 			params := map[string]any{}
-			CollectTimeRangeFlags(cmd, params)
+			CollectStatsFlags(cmd, params)
 			for _, f := range extraFlags {
 				CollectStringFlag(cmd, params, f.Name)
 			}
@@ -39,8 +39,8 @@ func NewStatsGetCmd(name, apiPath, label string, extraFlags []FlagSpec) *cobra.C
 	return c
 }
 
-// CollectTimeRangeFlags collects time range and sort flags from the command into params.
-func CollectTimeRangeFlags(cmd *cobra.Command, params map[string]any) {
+// CollectStatsFlags collects stats type/start-time/sort-by flags into params.
+func CollectStatsFlags(cmd *cobra.Command, params map[string]any) {
 	t, _ := cmd.Flags().GetString("type")
 	if t == "" {
 		t = "month"

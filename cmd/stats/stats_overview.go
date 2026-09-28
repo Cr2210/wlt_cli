@@ -25,7 +25,7 @@ func newStatsOverviewCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			cmdutil.CollectTimeRangeFlags(cmd, params)
+			cmdutil.CollectStatsFlags(cmd, params)
 			cmdutil.CollectStringFlag(cmd, params, "product-id")
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/homepage/dashboard2", params)
 			if err != nil {

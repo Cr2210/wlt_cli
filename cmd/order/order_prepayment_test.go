@@ -4,7 +4,7 @@ import "testing"
 
 func TestPrepayRelationListCmdFlags(t *testing.T) {
 	c := newOrderPrepayRelationListCmd()
-	for _, f := range []string{"order-id", "page-no", "page-size", "relation-type", "headers"} {
+	for _, f := range []string{"order-id", "page-no", "page-size", "relation-type", "biz-type", "headers"} {
 		if c.Flags().Lookup(f) == nil {
 			t.Errorf("list cmd missing flag %q", f)
 		}
@@ -13,7 +13,7 @@ func TestPrepayRelationListCmdFlags(t *testing.T) {
 
 func TestPrepayRelationCreateCmdFlags(t *testing.T) {
 	c := newOrderPrepayRelationCreateCmd()
-	for _, f := range []string{"order-id", "relation-type", "relation-id", "relation-amount"} {
+	for _, f := range []string{"order-id", "relation-type", "relation-id", "relation-amount", "biz-type"} {
 		if c.Flags().Lookup(f) == nil {
 			t.Errorf("create cmd missing flag %q", f)
 		}

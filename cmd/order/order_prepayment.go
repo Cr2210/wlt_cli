@@ -48,6 +48,8 @@ func newOrderPrepayRelationListCmd() *cobra.Command {
 				"pageSize": pageSize,
 			}
 			cmdutil.CollectStringFlag(cmd, params, "relation-type")
+			bizType, _ := cmd.Flags().GetString("biz-type")
+			params["bizType"] = bizType
 			cmdutil.CollectStringFlag(cmd, params, "headers")
 			resp, err := cmdutil.GetClient().Get(context.Background(), orderPrepaymentRelationAPIPath+"/page", params)
 			if err != nil {
@@ -62,6 +64,7 @@ func newOrderPrepayRelationListCmd() *cobra.Command {
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
 	c.Flags().String("relation-type", "", "关联类型：PAYMENT-付款单，SUPPLIER-供应商期初")
+	c.Flags().String("biz-type", "PURCHASE", "业务类型：PURCHASE-采购订单，LOGISTICS-物流订单")
 	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }
@@ -72,6 +75,7 @@ func newOrderPrepayRelationCreateCmd() *cobra.Command {
 	var orderId, relationId int64
 	var relationType string
 	var relationAmount float64
+	var bizType string
 	c := &cobra.Command{
 		Use:   "create",
 		Short: "创建预付关联",
@@ -84,6 +88,7 @@ func newOrderPrepayRelationCreateCmd() *cobra.Command {
 				"relationType":   relationType,
 				"relationId":     relationId,
 				"relationAmount": relationAmount,
+				"bizType":        bizType,
 			}
 			resp, err := cmdutil.GetClient().Post(context.Background(), orderPrepaymentRelationAPIPath+"/create", body)
 			if err != nil {
@@ -94,6 +99,7 @@ func newOrderPrepayRelationCreateCmd() *cobra.Command {
 	}
 	c.Flags().Int64Var(&orderId, "order-id", 0, "订单 ID")
 	c.Flags().StringVar(&relationType, "relation-type", "", "关联类型：PAYMENT-付款单，SUPPLIER-供应商期初")
+	c.Flags().StringVar(&bizType, "biz-type", "PURCHASE", "业务类型：PURCHASE-采购订单，LOGISTICS-物流订单")
 	c.Flags().Int64Var(&relationId, "relation-id", 0, "关联 ID（付款单 ID 或供应商期初 ID）")
 	c.Flags().Float64Var(&relationAmount, "relation-amount", 0, "关联预付金额（单位：元）")
 	_ = c.MarkFlagRequired("order-id")

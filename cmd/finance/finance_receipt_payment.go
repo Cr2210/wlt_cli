@@ -46,6 +46,7 @@ var financeReceiptPaymentFilters = []cmdutil.FlagSpec{
 	{Name: "update-time", Usage: "更新时间"},
 	{Name: "keyword", Usage: "关键字"},
 	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "is-prepaid", Usage: "预付标识（true 仅预付 / false 非预付）"},
 	{Name: "headers", Usage: "自定义导出表头"},
 }
 
@@ -69,6 +70,7 @@ var financeReceiptPaymentPageCountFilters = []cmdutil.FlagSpec{
 	{Name: "update-time", Usage: "更新时间"},
 	{Name: "keyword", Usage: "关键字"},
 	{Name: "custom-order", Usage: "前端自定义排序规则"},
+	{Name: "is-prepaid", Usage: "预付标识（true 仅预付 / false 非预付）"},
 }
 
 var financeReceiptPaymentCmd = &cobra.Command{

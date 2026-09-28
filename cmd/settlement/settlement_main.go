@@ -29,6 +29,7 @@ func init() {
 		newSettlementMainUpdateCmd(),
 		newSettlementMainDeleteCmd(),
 		newSettlementMainUpdateStatusCmd(),
+		newSettlementMainIgnoreRemainderCmd(),
 		newSettlementMainUnsettleWaybillCmd(),
 		newSettlementMainUnsettleWaybillCountCmd(),
 		newSettlementMainExportExcelCmd(),
@@ -344,5 +345,40 @@ func newSettlementMainExportExcelCmd() *cobra.Command {
 		},
 	}
 	registerSettlementListFlags(c)
+	return c
+}
+
+// ---- 忽略剩余结算/开票 ----
+
+func newSettlementMainIgnoreRemainderCmd() *cobra.Command {
+	var id int64
+	var ignoreType, reason string
+
+	c := &cobra.Command{
+		Use:   "ignore-remainder",
+		Short: "忽略结算单剩余结算/开票金额",
+		Long:  "忽略剩余结算/开票金额：剩余归零，状态翻转为已结算/已开票，需填原因。仅已审核且 invoiceFlag=无需开票 时可忽略开票剩余。",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			body := map[string]any{
+				"id":     id,
+				"type":   ignoreType,
+				"reason": reason,
+			}
+			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/settlement/ignore-remainder", body)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("忽略剩余结算/开票失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().Int64Var(&id, "id", 0, "结算单 ID")
+	c.Flags().StringVar(&ignoreType, "type", "", "忽略类型：SETTLE-剩余结算，INVOICE-剩余开票")
+	c.Flags().StringVar(&reason, "reason", "", "忽略原因")
+	_ = c.MarkFlagRequired("id")
+	_ = c.MarkFlagRequired("type")
+	_ = c.MarkFlagRequired("reason")
 	return c
 }

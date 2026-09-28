@@ -294,6 +294,7 @@ func newLogisticsSettlementExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := buildLogisticsListParams(cmd, 0, 0, false)
+			cmdutil.CollectStringFlags(cmd, params, "headers")
 			resp, err := cmdutil.GetClient().Get(context.Background(), logisticsSettlementAPIPath+"/export-excel", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("导出物流结算单失败: %s", err), "")
@@ -303,5 +304,6 @@ func newLogisticsSettlementExportExcelCmd() *cobra.Command {
 		},
 	}
 	registerLogisticsListFlags(c)
+	c.Flags().String("headers", "", "自定义导出表头")
 	return c
 }

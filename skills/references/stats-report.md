@@ -79,7 +79,7 @@
 
 > **审计备注(2026-07)**:
 > - URL 样本 `?productId=...&type=month&startTime=2026-07-01 00:00:00` 确认生产统计 1 个命令需 `--product-id` flag。
-> - **特殊**:URL 样本**未带 `sortBy`**,而 finance/sale/purchase 的样本都带 `sortBy=amount` / `sortBy=enterprise`。**CLI 默认仍会发 `sortBy=amount`**(走 `CollectTimeRangeFlags` 通用逻辑),后端可能忽略或报错,待实测确认。
+> - **特殊**:URL 样本**未带 `sortBy`**,而 finance/sale/purchase 的样本都带 `sortBy=amount` / `sortBy=enterprise`。**CLI 默认仍会发 `sortBy=amount`**(走 `CollectStatsFlags` 通用逻辑),后端可能忽略或报错,待实测确认。
 > - 1 个命令共享 `produceFlags = [{product-id}]`。
 
 ## 报表 (`wlt report`)

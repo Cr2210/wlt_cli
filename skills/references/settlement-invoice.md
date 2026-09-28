@@ -135,7 +135,7 @@ wlt settlement main ignore-remainder --id <结算单ID> --type INVOICE --reason 
 | `wlt settlement logistics available-waybill-count` | 统计可选运单合计（金额/装货重量/卸货重量） | 同上 |
 | `wlt settlement logistics recalculate-all` | 全量重算所有物流订单聚合结算明细（数据对齐，低频运维操作） | — |
 | `wlt settlement logistics ignore-remainder` | 忽略剩余结算/开票金额 | `--id`, `--type`, `--reason` |
-| `wlt settlement logistics export` | 导出物流结算单 Excel | 与 list 同筛选字段 |
+| `wlt settlement logistics export` | 导出物流结算单 Excel | 与 list 同筛选字段 + `--headers` 自定义导出表头 |
 
 ### 查询示例
 

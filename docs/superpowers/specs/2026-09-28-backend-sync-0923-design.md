@@ -8,7 +8,7 @@ CLI 上次对接后端为 2026-08-21（6318e49）。后端 dev-1.7/ge-dev-1.8 �
 
 | 类别 | 模块 | 后端前缀 | 创建时间 | 端点数 |
 |---|---|---|---|---|
-| A1 | 物流结算 | `/erp/logistics-settlement` | 08-28 | 14 |
+| A1 | 物流结算 | `/erp/logistics-settlement` | 08-28 | 13 |
 | A2 | 销售核算 | `/erp/sale-accounting` | 09-15 | 11 |
 | A3 | 运费申请（物流付款申请） | `/erp/finance-freight-apply` | 09-17 | 11 |
 | B1 | 结算单忽略剩余 | `/erp/settlement/ignore-remainder` + `invoiceFlag` 提交字段 | 09-22/23 | 1 |
@@ -45,7 +45,7 @@ CLI 上次对接后端为 2026-08-21（6318e49）。后端 dev-1.7/ge-dev-1.8 �
 
 通用约定（全仓既有）：stdout 数据 JSON / stderr 错误 JSON / 退出码 0-6；`EnsureClient()` 鉴权；分页 `--page-no/--page-size`；时间筛选 `--start-time/--end-time`（映射 `{timeKey}[0]/[1]`）；create/update 用 `--data` JSON 直传；无参 GET 直接透传。
 
-### A1 物流结算 `wlt settlement logistics`（14 端点）
+### A1 物流结算 `wlt settlement logistics`（13 端点）
 
 | 子命令 | 端点 | flags |
 |---|---|---|
@@ -105,7 +105,7 @@ settlement 域 Long 描述同步更新为"结算单CRUD、物流结算、取消�
 
 ## 核实结论（原疑点已排除）
 
-- CLI 现有 `wlt settlement main unsettle-waybill(-count)` 指向 `/erp/settlement/unsettle/waybill`，经核实该端点确属 `ErpSettlementController`，命令有效，无需改动。物流结算模块自身无 unsettle 端点（首次差异分析两 Controller 输出合并导致误判，已纠正为 14 端点）。
+- CLI 现有 `wlt settlement main unsettle-waybill(-count)` 指向 `/erp/settlement/unsettle/waybill`，经核实该端点确属 `ErpSettlementController`，命令有效，无需改动。物流结算模块自身无 unsettle 端点（首次差异分析两 Controller 输出合并导致误判，已纠正为 13 端点）。
 
 ## 文档与验证
 

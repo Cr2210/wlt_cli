@@ -39,6 +39,7 @@
 | `wlt settlement main update` | 更新结算单 | `--data` |
 | `wlt settlement main delete` | 删除结算单 | `--id` |
 | `wlt settlement main update-status` | 更新结算单状态 | `--data`（含 id 和 status） |
+| `wlt settlement main ignore-remainder` | 忽略剩余结算/开票金额 | `--id`, `--type`, `--reason` |
 | `wlt settlement main unsettle-waybill` | 查看未结算运单 | `--customer-id` / `--supplier-id` / `--warehouse-id` |
 | `wlt settlement main unsettle-waybill-count` | 统计未结算运单 | 同上 |
 | `wlt settlement main export` | 导出结算单 Excel | 与 list 同筛选字段 |
@@ -86,6 +87,79 @@ wlt settlement main list \
 wlt settlement main export --type SALE_SETTLEMENT --settle-status PART_SETTLED
 ```
 
+### 忽略剩余（ignore-remainder）
+
+```bash
+# 忽略剩余结算金额（剩余归零，状态翻转为已结算）
+wlt settlement main ignore-remainder --id <结算单ID> --type SETTLE --reason "尾差忽略"
+
+# 忽略剩余开票金额（要求结算单 invoiceFlag=无需开票，且仅已审核单可操作）
+wlt settlement main ignore-remainder --id <结算单ID> --type INVOICE --reason "无需开票"
+```
+
+> ⚠️ `--type` 取值：`SETTLE`（剩余结算）/ `INVOICE`（剩余开票）；`--reason` 必填。忽略开票剩余要求结算单 `invoiceFlag=无需开票` 且已审核，否则后端拒绝。
+>
+> `create` / `update` 的 `--data` 可携带 `"invoiceFlag": 1`（无需开票标识）；`1→0` 的回退有守卫，已置为无需开票后不能直接改回。
+
+---
+
+## 物流结算 (`wlt settlement logistics`)
+
+**API 路径**：`/erp/logistics-settlement`（承运商维度的物流结算单）
+
+### list / page-count / export 共用筛选字段
+
+| Flag | 后端参数 | 说明 |
+|------|----------|------|
+| `--no` | `no` | 结算单号 |
+| `--name` | `name` | 结算单名称 |
+| `--carrier-name` | `carrierName` | 承运商名称 |
+| `--carrier-enterprise-id` | `carrierEnterpriseId` | 承运商企业 ID |
+| `--status` | `status` | 状态 |
+| `--start-date` | `settlementDate[0]` | 结算日期起始（如 `2026-07-01 00:00:00`） |
+| `--end-date` | `settlementDate[1]` | 结算日期结束（如 `2026-07-31 23:59:59`） |
+
+### 子命令一览
+
+| 命令 | 说明 | 必填参数 |
+|------|------|----------|
+| `wlt settlement logistics list` | 分页查询物流结算单 | — |
+| `wlt settlement logistics page-count` | 按筛选统计金额合计（Σ含税金额/Σ结算金额/Σ开票金额/Σ忽略额） | — |
+| `wlt settlement logistics get --id <N>` | 获取物流结算单详情 | `--id` |
+| `wlt settlement logistics create` | 创建物流结算单 | `--data` |
+| `wlt settlement logistics update` | 更新物流结算单 | `--data` |
+| `wlt settlement logistics delete` | 删除物流结算单 | `--ids`（逗号分隔） |
+| `wlt settlement logistics update-status` | 更新物流结算单状态（后端 @RequestParam） | `--id`, `--status` |
+| `wlt settlement logistics mismatch-list` | 分页查询金额差异运单（运单金额与结算金额不一致） | —（可选 `--keyword`） |
+| `wlt settlement logistics available-waybill` | 分页查询可选运单 | —（可选 `--carrier-id`, `--carrier-name`, `--keyword`, `--settlement-id`） |
+| `wlt settlement logistics available-waybill-count` | 统计可选运单合计（金额/装货重量/卸货重量） | 同上 |
+| `wlt settlement logistics recalculate-all` | 全量重算所有物流订单聚合结算明细（数据对齐，低频运维操作） | — |
+| `wlt settlement logistics ignore-remainder` | 忽略剩余结算/开票金额 | `--id`, `--type`, `--reason` |
+| `wlt settlement logistics export` | 导出物流结算单 Excel | 与 list 同筛选字段 |
+
+### 查询示例
+
+```bash
+# 按承运商 + 结算日期范围筛选
+wlt settlement logistics list \
+  --carrier-name 某物流公司 \
+  --start-date "2026-07-01 00:00:00" --end-date "2026-07-31 23:59:59"
+
+# 差异运单（结算金额 vs 运单金额不一致）
+wlt settlement logistics mismatch-list --keyword 车牌号
+
+# 可选运单（创建结算单时选运单 / 详情回显 / 结算单带出明细）
+wlt settlement logistics available-waybill --carrier-id <承运商ID> --settlement-id <结算单ID>
+
+# 忽略剩余（同 settlement main 的规则：SETTLE/INVOICE，INVOICE 要求 invoiceFlag=无需开票）
+wlt settlement logistics ignore-remainder --id <物流结算单ID> --type SETTLE --reason "尾差忽略"
+
+# 导出 Excel（参数同 list）
+wlt settlement logistics export --carrier-name 某物流公司
+```
+
+> ⚠️ `recalculate-all` 为全量重算运维操作，执行前必须获得用户确认。
+
 ---
 
 ## 发票管理 (`wlt invoice main`)
@@ -103,7 +177,8 @@ wlt settlement main export --type SALE_SETTLEMENT --settle-status PART_SETTLED
 
 ## 关键区分
 
-- **`settlement`（运单结算）**：基于运单的结算管理，处理运输费用结算
+- **`settlement main`（采购/销售结算单）**：客户/供应商维度的结算单管理
+- **`settlement logistics`（物流结算单）**：承运商维度的物流结算，处理运输费用结算
 - **`finance settlement`（财务结算单据）**：财务模块的结算单据管理
 - **`invoice`（业务发票）**：独立的发票管理模块
 - **`partner invoice`（客户/供应商发票抬头）**：客户/供应商下的发票抬头信息

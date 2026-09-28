@@ -36,16 +36,16 @@ cmd/                    # Cobra 命令层，每个业务域一个独立 Go 包
 ├── supplier/           # 供应商管理（复用 partner 包）
 ├── partner/            # 客户/供应商共享逻辑（CRUD/invoice/settlement/credit）
 ├── purchase/           # 采购管理（in/return）
-├── sale/               # 销售管理（out/return）
+├── sale/               # 销售管理（out/return/accounting）
 ├── report/             # 报表管理（stock/purchase/sale）
 ├── stats/              # 数据总览（overview/finance/purchase/sale/produce/stock）
-├── finance/            # 财务管理（account/payment/receipt/refund/settlement/write-off/invoice-apply）
+├── finance/            # 财务管理（account/payment/receipt/refund/settlement/write-off/invoice-apply/freight-apply）
 ├── waybill/            # 运单管理（source/push-config）
 ├── order/              # 订单管理（main/plan/prepayment-relation）
 ├── produce/            # 生产管理（main/plan）
 ├── quality/            # 质检管理（inspection/weight）
 ├── weight/             # 称重管理（waybill）
-├── settlement/         # 结算管理（main）
+├── settlement/         # 结算管理（main/logistics：结算单/物流结算单）
 ├── invoice/            # 发票管理（main）
 ├── homepage/           # 首页数据总览（dashboard1-6/inventory-backlog/product-ranking）
 ├── operate_log/        # 操作日志查询
@@ -62,7 +62,8 @@ internal/
 │   ├── helpers.go      #   ParseJSONData, CollectStringFlag/Flags, CollectIntFlags
 │   ├── output.go       #   OutputJSON, OutputPagedJSON, OutputRaw, ParsePagedJSON
 │   ├── crud.go         #   CRUDConfig, NewCRUDGroup, AddCRUDToParent, DocumentCmds + 工厂函数
-│   └── stats.go        #   NewStatsGetCmd, CollectTimeRangeFlags, AddStatsFlags
+│   ├── stats.go        #   NewStatsGetCmd, CollectStatsFlags, AddStatsFlags
+│   └── timeflags.go    #   通用时间范围 flag helper（AddTimeRangeFlags/CollectTimeRangeFlags）
 ├── config/             # 配置文件管理（~/.wlt/config.yaml）
 └── output/             # JSON 输出格式化（stdout/stderr 分离）
 skills/                 # AI Agent Skills Markdown

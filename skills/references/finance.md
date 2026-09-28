@@ -101,7 +101,7 @@
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt finance receipt-payment page` | 分页查询收付款记录 | `--page-no`, `--page-size`, `--no`, `--type`, `--pay-date`, `--account-id`, `--account-name`, `--account-no`, `--partner-id`, `--partner-name`, `--service-user-id`, `--service-user-name`, `--status`, `--approve-status`, `--remark`, `--creator-name`, `--updater-name`, `--create-time`, `--update-time`, `--keyword`, `--custom-order`, `--headers` |
+| `wlt finance receipt-payment page` | 分页查询收付款记录 | `--page-no`, `--page-size`, `--no`, `--type`, `--pay-date`, `--account-id`, `--account-name`, `--account-no`, `--partner-id`, `--partner-name`, `--service-user-id`, `--service-user-name`, `--status`, `--approve-status`, `--remark`, `--creator-name`, `--updater-name`, `--create-time`, `--update-time`, `--keyword`, `--custom-order`, `--is-prepaid`, `--headers` |
 | `wlt finance receipt-payment page-count` | 按筛选统计收付款记录数量 | 同 `receipt-payment page`（去 `--headers`） |
 | `wlt finance receipt-payment get` | 获取收付款详情 | `--id` 或 `--no`（任选其一） |
 | `wlt finance receipt-payment create --data '<json>'` | 创建收付款 | `--data`（必填） |
@@ -110,6 +110,8 @@
 | `wlt finance receipt-payment update-status --data '<json>'` | 更新收付款状态 | `--data`（必填） |
 | `wlt finance receipt-payment summary` | 获取收付款汇总数据（支持同 `page-count` 的筛选） | 同 `receipt-payment page-count` |
 | `wlt finance receipt-payment export` | 导出收付款记录 Excel | 同 `receipt-payment page` |
+
+> `--is-prepaid`（`true` 仅预付 / `false` 非预付）按预付标识筛选。预付记录可经 `wlt order prepayment-relation list/create --biz-type PURCHASE|LOGISTICS` 关联到订单：默认 `PURCHASE`（采购订单）；`LOGISTICS`（物流订单）无供应商期初，`--relation-type` 仅可用 `PAYMENT`（付款单关联，`SUPPLIER`-供应商期初不适用）。
 
 ## 账户结算 (`wlt finance account-settlement`)
 
@@ -121,3 +123,78 @@
 | `wlt finance account-settlement update --data '<json>'` | 更新 | `--data`（必填） |
 | `wlt finance account-settlement delete --id <N>` | 删除 | `--id`（必填） |
 | `wlt finance account-settlement export` | 导出 Excel | `--account-id`, `--settlement-no`, `--business-no`, `--business-id`, `--type` |
+
+## 运费申请 (`wlt finance freight-apply`)
+
+**API 路径**：`/erp/finance-freight-apply`（物流付款申请，承运商维度）
+
+### list / summary / export 共用筛选字段
+
+| Flag | 后端参数 | 说明 |
+|------|----------|------|
+| `--no` | `no` | 申请单号 |
+| `--carrier-enterprise-id` | `carrierEnterpriseId` | 承运商企业 ID |
+| `--carrier-name` | `carrierName` | 承运商名称 |
+| `--payment-account-id` | `paymentAccountId` | 付款账户 ID |
+| `--receipt-account-id` | `receiptAccountId` | 收款账户 ID |
+| `--service-user-id` | `serviceUserId` | 业务员 ID |
+| `--approve-status` | `approveStatus` | 审批状态 |
+| `--pay-date-start` / `--pay-date-end` | `payDate[0]` / `payDate[1]` | 付款日期范围 |
+| `--create-time-start` / `--create-time-end` | `createTime[0]` / `createTime[1]` | 创建时间范围 |
+
+### 子命令一览
+
+| 命令 | 说明 | 关键参数 |
+|------|------|---------|
+| `wlt finance freight-apply list` | 分页查询运费申请 | 同上筛选 + `--page-no`, `--page-size` |
+| `wlt finance freight-apply get --id <N>` | 获取运费申请详情 | `--id`（必填） |
+| `wlt finance freight-apply create --data '<json>'` | 创建运费申请 | `--data`（必填） |
+| `wlt finance freight-apply update --data '<json>'` | 更新运费申请 | `--data`（必填） |
+| `wlt finance freight-apply delete --ids <N,N>` | 删除运费申请 | `--ids`（逗号分隔，必填） |
+| `wlt finance freight-apply update-status` | 处理运费申请（审批，后端 @RequestParam） | `--id`, `--approve-status`（均必填） |
+| `wlt finance freight-apply summary` | 按筛选统计合计（数量分状态统计 + Σ总金额） | 同 list 筛选（去分页） |
+| `wlt finance freight-apply available-waybill` | 分页查询可选运单 | 见下方候选运单筛选 |
+| `wlt finance freight-apply available-waybill-count` | 统计可选运单（Σ结算重量/Σ含税金额/Σ装货重量/Σ卸货重量） | 同 `available-waybill`（去分页） |
+| `wlt finance freight-apply available-settlement` | 分页查询可选物流结算单（availableCount=0 置灰） | 见下方可选结算单筛选 |
+| `wlt finance freight-apply export` | 导出运费申请 Excel | 同 list 筛选 + `--headers` |
+
+### 可选运单筛选字段（available-waybill / available-waybill-count）
+
+| Flag | 后端参数 | 说明 |
+|------|----------|------|
+| `--waybill-no` | `waybillNo` | 运单号 |
+| `--carrier-id` | `carrierId` | 承运商 ID |
+| `--settlement-id` | `settlementId` | 物流结算单 ID |
+| `--apply-id` | `applyId` | 运费申请 ID |
+| `--load-date-start` / `--load-date-end` | `realLoadDate[0]` / `realLoadDate[1]` | 实际装货日期范围 |
+| `--unload-date-start` / `--unload-date-end` | `realUnloadDate[0]` / `realUnloadDate[1]` | 实际卸货日期范围 |
+
+### 可选物流结算单筛选字段（available-settlement）
+
+| Flag | 后端参数 | 说明 |
+|------|----------|------|
+| `--no` | `no` | 结算单号 |
+| `--carrier-enterprise-id` | `carrierEnterpriseId` | 承运商企业 ID |
+| `--carrier-name` | `carrierName` | 承运商名称 |
+| `--apply-id` | `applyId` | 运费申请 ID |
+| `--settlement-date-start` / `--settlement-date-end` | `settlementDate[0]` / `settlementDate[1]` | 结算日期范围 |
+
+### 查询示例
+
+```bash
+# 按承运商 + 付款日期范围筛选
+wlt finance freight-apply list --carrier-name 某物流公司 \
+  --pay-date-start "2026-07-01 00:00:00" --pay-date-end "2026-07-31 23:59:59"
+
+# 可选运单（选择运单 / 详情回显 / 结算单带出明细）
+wlt finance freight-apply available-waybill --carrier-id <承运商ID> --settlement-id <结算单ID>
+
+# 可选物流结算单
+wlt finance freight-apply available-settlement --carrier-name 某物流公司
+
+# 审批处理
+wlt finance freight-apply update-status --id <申请ID> --approve-status <状态>
+
+# 导出 Excel（参数同 list）
+wlt finance freight-apply export --carrier-name 某物流公司
+```

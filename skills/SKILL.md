@@ -42,9 +42,9 @@ cli_version: ">=0.1.0"
 | `product` | 产品管理：产品 CRUD / 单位 / 计量 / 分类 / 指标 | [product.md](./references/product.md) |
 | `customer` / `supplier` | 客户供应商：CRUD / 发票 / 结算 / 信用额度 | [partner.md](./references/partner.md) |
 | `contract` | 合同管理：采购合同&长协 / 销售合同&长协 / 运输合同&长协 / 服务合同&长协 | [contract.md](./references/contract.md) |
-| `sale` | 销售管理：销售出库 / 销售退货 | [sale-purchase.md](./references/sale-purchase.md) |
+| `sale` | 销售管理：销售出库 / 销售退货 / 销售核算 | [sale-purchase.md](./references/sale-purchase.md) |
 | `purchase` | 采购管理：采购入库 / 采购退货 | [sale-purchase.md](./references/sale-purchase.md) |
-| `finance` | 财务管理：账户 / 收付款记录 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 账户结算 | [finance.md](./references/finance.md) |
+| `finance` | 财务管理：账户 / 收付款记录 / 退款 / 收开票 / 付款申请 / 预付申请 / 结算 / 核销 / 开票申请 / 账户结算 / 运费申请 | [finance.md](./references/finance.md) |
 | `order` | 订单管理：主订单 / 计划（采购/销售 + CRUD）/ 预付关联 | [order.md](./references/order.md) |
 | `produce` | 生产管理：生产单 / 生产计划 | [produce.md](./references/produce.md) |
 | `waybill` | 运单管理：运单全生命周期 / 推送配置 | [waybill.md](./references/waybill.md) |
@@ -53,7 +53,7 @@ cli_version: ">=0.1.0"
 | `stats` | 数据统计：总览 / 库存 / 财务 / 销售 / 采购 / 生产 | [stats-report.md](./references/stats-report.md) |
 | `report` | 报表：库存报表 / 采购报表 / 销售报表 | [stats-report.md](./references/stats-report.md) |
 | `homepage` / `screen` | 首页仪表盘 / 大屏数据 | [stats-report.md](./references/stats-report.md) |
-| `settlement` | 结算管理：运单结算 | [settlement-invoice.md](./references/settlement-invoice.md) |
+| `settlement` | 结算管理：结算单 / 物流结算单 / 忽略剩余 | [settlement-invoice.md](./references/settlement-invoice.md) |
 | `invoice` | 发票管理：发票 CRUD | [settlement-invoice.md](./references/settlement-invoice.md) |
 | `system` | 系统管理：用户 / 部门 / 角色 / 菜单 / 字典 | [system.md](./references/system.md) |
 | `operate-log` | 操作日志查询 | 本文档「辅助模块」章节 |
@@ -103,8 +103,10 @@ wlt api GET /erp/customer/page --token fee383b0****fc0 --tenant-id 999 --params 
 用户提到"客户/供应商/合作伙伴/发票抬头/结算账户/信用额度" → `customer` / `supplier`
 用户提到"合同/长协/采购长协/销售长协/运输长协/服务长协/销售合同/运输合同/服务合同" → `contract`
 用户提到"销售/卖出/销售出库/销售退货" → `sale`
+用户提到"销售核算/核算单/试算" → `sale accounting`
 用户提到"采购/买入/采购入库/采购退货" → `purchase`
 用户提到"财务/账户/付款/收款/退款/核销/开票/转账/调账" → `finance`
+用户提到"运费申请/物流付款申请" → `finance freight-apply`
 用户提到"订单/主订单/排产/关联运单/取消订单/完成订单/采购计划/销售计划/运输计划/预付关联/订单预付" → `order`
 用户提到"生产/生产单/生产计划/质检数据" → `produce`
 用户提到"运单/物流/发货/签收/装卸/推送配置" → `waybill`
@@ -114,12 +116,14 @@ wlt api GET /erp/customer/page --token fee383b0****fc0 --tenant-id 999 --params 
 用户提到"报表/导出/明细报表/汇总" → `report`
 用户提到"首页/仪表盘/大屏/看板" → `homepage` / `screen`
 用户提到"结算/运单结算/未结算" → `settlement`
+用户提到"物流结算/承运商结算" → `settlement logistics`
+用户提到"忽略剩余结算/开票" → `settlement main ignore-remainder` / `settlement logistics ignore-remainder`
 用户提到"发票/开票/发票管理" → `invoice`
 用户提到"用户/部门/角色/权限/菜单/字典/系统设置" → `system`
 
 关键区分:
 - `stock`（库存数量查询） vs `report stock`（库存报表/统计）
-- `finance settlement`（财务结算单据） vs `settlement`（运单结算）
+- `settlement main`（采购/销售结算单） vs `settlement logistics`（物流结算单，承运商维度） vs `finance settlement`（财务结算单据）
 - `customer credit`（客户信用额度） vs `finance account`（财务账户余额）
 - `sale out`（销售出库单） vs `stock out`（其他出库单）
 - `purchase in`（采购入库单） vs `stock in`（其他入库单）

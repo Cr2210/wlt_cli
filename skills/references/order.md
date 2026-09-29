@@ -1,5 +1,7 @@
 # 订单管理 (order)
 
+> 🔗 订单上承合同与计划（计划 → 订单），下接出入库单据（`purchase in` / `sale out`）与运单（`link-waybill`）；预付经 `prepayment-relation` 挂到订单。全链路见 [business-flows.md](./business-flows.md)。
+
 ## 总览
 
 订单模块覆盖：

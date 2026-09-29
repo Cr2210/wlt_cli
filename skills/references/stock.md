@@ -1,5 +1,7 @@
 # 库存管理 (stock)
 
+> 🔗 库存上承采购入库/销售出库/生产入库（`stock record --biz-type/--biz-no` 可追溯到来源单据），可按 `--plan-no`/`--supplier-id` 回溯计划与供应商。全链路见 [business-flows.md](./business-flows.md)。
+
 ## 仓库管理 (`wlt stock warehouse`)
 
 | 命令 | 说明 | 关键参数 |
@@ -39,26 +41,21 @@
 
 ## 出库单 (`wlt stock out`)
 
-与入库单结构相同，将 `in` 替换为 `out`。
-
-## 调拨单 (`wlt stock move`)
-
-与入库单结构相同，将 `in` 替换为 `move`。
-
-## 盘点单 (`wlt stock check`)
-
-与入库单结构相同，将 `in` 替换为 `check`。
-
-## 库存明细 (`wlt stock record`)
+> 与入库单命令结构相同（`list`/`page-count`/`get`/`create`/`update`/`delete`/`update-status`），但**筛选字段不同**：出库单按 `--customer-id`/`--customer-name` 筛选（入库单是 `--supplier-*`），时间参数转 `outTime[0]`/`outTime[1]`。
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock record page` | 分页查询出入库明细 | `--page-no`, `--page-size`, `--product-id`, `--category-id`, `--warehouse-id`, `--biz-type`, `--biz-no`, `--create-time`, `--in-time`, `--metrics-name`, `--product-name`, `--batch-no`, `--keyword`, `--headers` |
-| `wlt stock record page-count` | 按筛选统计出入库明细数量 | 同 `record page`（去 `--headers`） |
-| `wlt stock record get --id <N>` | 获取出入库明细详情 | `--id`（必填） |
-| `wlt stock record count` | 获取出入库明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
+| `wlt stock out list`（`page` 别名） | 分页查询出库单 | `--page-no`, `--page-size`, `--no`, `--customer-id`, `--customer-name`, `--start-time`, `--end-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
+| `wlt stock out page-count` | 按筛选统计出库单数量 | 同 `out list`（去 `--headers`） |
+| `wlt stock out get --id <N>` | 获取出库单详情 | `--id`（必填） |
+| `wlt stock out create --data '<json>'` | 创建出库单 | `--data`（必填） |
+| `wlt stock out update --data '<json>'` | 更新出库单 | `--data`（必填） |
+| `wlt stock out delete --ids <id1,id2>` | 删除出库单 | `--ids`（必填） |
+| `wlt stock out update-status --data '<json>'` | 更新出库单状态 | `--data`（必填，含 id 和 status） |
 
 ## 调拨单 (`wlt stock move`)
+
+> 与入库单命令结构相同，但**筛选字段不同**：调拨单按 `--from-warehouse-id`/`--to-warehouse-id` 筛选（无供应商/客户字段）。
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
@@ -72,6 +69,8 @@
 
 ## 盘点单 (`wlt stock check`)
 
+> 与入库单命令结构相同，但筛选字段以 `--warehouse-id` 为主（无供应商/客户字段）。
+
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
 | `wlt stock check list`（`page` 别名） | 分页查询盘点单 | `--page-no`, `--page-size`, `--no`, `--warehouse-id`, `--start-time`, `--end-time`, `--status`, `--remark`, `--creator`, `--creator-name`, `--create-time`, `--update-time`, `--updater`, `--updater-name`, `--product-id`, `--product-name`, `--metrics-name`, `--batch-no`, `--user-id`, `--custom-order`, `--keyword`, `--headers` |
@@ -82,17 +81,14 @@
 | `wlt stock check delete --ids <id1,id2>` | 删除盘点单 | `--ids`（必填） |
 | `wlt stock check update-status --data '<json>'` | 更新盘点单状态 | `--data`（必填，含 id 和 status） |
 
-## 出库单 (`wlt stock out`)
+## 库存明细 (`wlt stock record`)
 
 | 命令 | 说明 | 关键参数 |
 |------|------|---------|
-| `wlt stock out list`（`page` 别名） | 分页查询出库单 | `--page-no`, `--page-size`, `--no`, `--customer-id`, `--customer-name`, `--start-time`, `--end-time`, `--status`, `--remark`, `--creator`, `--product-id`, `--product-name`, `--warehouse-id`, `--warehouse-name`, `--metrics-name`, `--creator-name`, `--user-id`, `--receive-address`, `--send-address`, `--batch-no`, `--create-time`, `--updater-name`, `--update-time`, `--custom-order`, `--keyword`, `--headers` |
-| `wlt stock out page-count` | 按筛选统计出库单数量 | 同 `out list`（去 `--headers`） |
-| `wlt stock out get --id <N>` | 获取出库单详情 | `--id`（必填） |
-| `wlt stock out create --data '<json>'` | 创建出库单 | `--data`（必填） |
-| `wlt stock out update --data '<json>'` | 更新出库单 | `--data`（必填） |
-| `wlt stock out delete --ids <id1,id2>` | 删除出库单 | `--ids`（必填） |
-| `wlt stock out update-status --data '<json>'` | 更新出库单状态 | `--data`（必填，含 id 和 status） |
+| `wlt stock record page` | 分页查询出入库明细 | `--page-no`, `--page-size`, `--product-id`, `--category-id`, `--warehouse-id`, `--biz-type`, `--biz-no`, `--create-time`, `--in-time`, `--metrics-name`, `--product-name`, `--batch-no`, `--keyword`, `--headers` |
+| `wlt stock record page-count` | 按筛选统计出入库明细数量 | 同 `record page`（去 `--headers`） |
+| `wlt stock record get --id <N>` | 获取出入库明细详情 | `--id`（必填） |
+| `wlt stock record count` | 获取出入库明细总数量 | ⚠️ SIT 后端异常，暂不可用 |
 
 ## 常见工作流
 

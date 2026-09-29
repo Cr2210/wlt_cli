@@ -1,5 +1,7 @@
 # 运单管理 (waybill)
 
+> 🔗 运单是三大业务主线的交汇点：订单经 `order main link-waybill` 关联运单；签收后的运单进入销售结算（`unsettle-waybill`）与物流结算（`available-waybill`）；装卸重量衔接称重/质检。全链路见 [business-flows.md](./business-flows.md)。
+
 > 后端运单服务现仅一组路径 `/erp/waybill/*`。`get` / `page` / `page-count` 是只读查询命令,顶层平铺。`load` 是装货写入命令（危险写操作,需要 token 鉴权）。
 
 ## 命令一览 (`wlt waybill *`)

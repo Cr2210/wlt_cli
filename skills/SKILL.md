@@ -1,6 +1,6 @@
 ---
 name: wlt
-description: 管理维链通 ERP 系统全部能力（库存/产品/客户/供应商/合同/销售/采购/财务/订单/生产/运单/质检/称重/统计/报表/结算/发票/系统管理等）。当用户需要查询库存、管理产品、操作客户供应商、管理合同、处理销售采购单据、管理财务收支核销、管理订单生产单、追踪运单物流、查看质检称重数据、查看统计分析报表、管理结算发票、操作系统用户角色权限字典时使用。
+description: 管理维链通 ERP 系统全部能力（库存/产品/客户/供应商/合同/销售/采购/销售核算/物流结算/运费申请/财务/订单/生产/运单/质检/称重/统计/报表/首页仪表盘/大屏/结算/发票/利润/数据同步/操作日志/定时任务/系统管理等）。当用户需要查询库存、管理产品、操作客户供应商、管理合同、处理销售采购单据与销售核算、管理财务收支核销与运费申请、管理订单生产单、追踪运单物流与物流结算、查看质检称重数据、查看统计分析报表与首页大屏仪表盘、管理结算发票、查询利润事件、重发数据同步消息、查询操作日志、触发定时任务、操作系统用户角色权限字典时使用。跨模块业务主线（采购/销售/物流全链路的数据流转）见 references/business-flows.md。
 cli_version: ">=0.1.0"
 ---
 
@@ -33,7 +33,7 @@ cli_version: ">=0.1.0"
 
 ## 模块总览
 
-> 若用户意图涉及多步操作或跨模块流程，**先匹配下方「常见工作流」**；仅当明确是单模块单步操作时，按本表路由。
+> 若用户意图涉及多步操作或跨模块流程，**先匹配下方「常见工作流」**；涉及跨模块业务主线（一个对象从建档到结算付款的全链路，如"采购到付款""销售到收款""运单到运费"），**读取 [references/business-flows.md](./references/business-flows.md)**；仅当明确是单模块单步操作时，按本表路由。
 
 | 模块 | 用途 | 参考文件 |
 |------|------|----------|
@@ -120,6 +120,10 @@ wlt api GET /erp/customer/page --token fee383b0****fc0 --tenant-id 999 --params 
 用户提到"忽略剩余结算/开票" → `settlement main ignore-remainder` / `settlement logistics ignore-remainder`
 用户提到"发票/开票/发票管理" → `invoice`
 用户提到"用户/部门/角色/权限/菜单/字典/系统设置" → `system`
+用户提到"利润/利润事件/利润统计/重算利润" → `profit-event` / `profit-calculation`
+用户提到"数据同步/同步消息/消息重发" → `data-sync`
+用户提到"操作日志/操作记录/谁改的" → `operate-log`
+用户提到"定时任务/手动触发/重算产品成本/重算应收余额" → `job-trigger`
 
 关键区分:
 - `stock`（库存数量查询） vs `report stock`（库存报表/统计）
@@ -179,7 +183,8 @@ wlt profit-event list --page-size 20         # 利润事件列表
 wlt profit-event statistics                  # 利润事件统计
 wlt profit-event types                       # 利润事件类型
 wlt profit-event health                      # 健康检查
-wlt profit-event retry --id <ID>             # 重试事件
+wlt profit-event retry --event-id <ID>       # 重试事件
+wlt profit-event clean-expired               # 清理过期事件（写操作，谨慎）
 wlt profit-calculation batch-recalculate-all # 批量重算（写操作，谨慎）
 ```
 
@@ -197,6 +202,8 @@ wlt job-trigger execute-receivable-balance   # 执行应收余额计算
 ## 常见工作流
 
 > 以下示例为简洁起见**省略了 `--token` 与 `--tenant-id`**。实际执行时，**每条**业务命令都必须携带这两个 flag（例如 `wlt stock warehouse simple-list --token <accessToken> --tenant-id <租户ID>`），否则会以退出码 4 报「缺少必填鉴权参数」。
+>
+> 跨模块全链路（采购到付款 / 销售到收款 / 运单到运费，含每步传递的 ID 字段与"三处选运单"对比）见 [references/business-flows.md](./references/business-flows.md)。
 
 ### 1. 入库全流程
 
@@ -258,6 +265,17 @@ wlt stats overview --start-time 2024-01-01 --end-time 2024-12-31  # 总览
 wlt stats finance data-overview --start-time 2024-01-01           # 财务统计
 wlt stats sale customer-rankings --start-time 2024-01-01          # 客户排名
 wlt report stock detail --warehouse-id 1 --start-time 2024-01-01  # 库存报表
+```
+
+### 7. 跨模块示例：采购到付款（P2P 简版）
+
+```bash
+wlt purchase in list --supplier-id <供应商ID> --status 0            # 1. 找待审核采购入库单
+wlt purchase in update-status --data '{"id":<ID>,"status":2}'       # 2. 审核入库（形成库存）
+wlt settlement main unsettle-waybill --supplier-id <供应商ID>       # 3. 查供应商可结算的未结算运单
+wlt settlement main list --type PURCHASE_SETTLEMENT --supplier-id <供应商ID>  # 4. 查/定位采购结算单
+wlt finance receipt-payment page --type PAYMENT --partner-id <供应商ID>       # 5. 查付款记录
+wlt finance write-off page --type WRITE_OFF_PURCHASE --partner-id <供应商ID>  # 6. 查核销状态
 ```
 
 ## 危险操作确认
@@ -348,6 +366,7 @@ Step 3 → 执行命令
 
 ## 详细参考（按需读取）
 
+- [references/business-flows.md](./references/business-flows.md) — 业务主线与数据关联（采购/销售/物流全链路、三处选运单对比）
 - [references/auth-config.md](./references/auth-config.md) — 认证与配置
 - [references/stock.md](./references/stock.md) — 库存管理
 - [references/product.md](./references/product.md) — 产品管理

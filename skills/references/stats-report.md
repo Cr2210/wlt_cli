@@ -129,42 +129,4 @@
 | `wlt screen amount-used` | 金额大屏 | 无 |
 | `wlt screen project-count` | 项目大屏 | 无 |
 
-## 其他操作命令
-
-### 操作日志 (`wlt operate-log`)
-
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt operate-log list` | 操作日志列表 | `--module`, `--type`, `--user-name`, `--page-no`, `--page-size` |
-
-### 数据同步 (`wlt data-sync`)
-
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt data-sync list` | 同步消息列表 | `--status`, `--type`, `--page-no`, `--page-size` |
-| `wlt data-sync get --id <N>` | 获取同步详情 | `--id`（必填） |
-| `wlt data-sync resend --id <N>` | 重新发送 | `--id`（必填） |
-
-### 定时任务 (`wlt job-trigger`)
-
-| 命令 | 说明 | 参数 |
-|------|------|------|
-| `wlt job-trigger execute-product-cost` | 执行产品成本计算 | 无 |
-| `wlt job-trigger execute-receivable-balance` | 执行应收余额计算 | 无 |
-
-### 利润事件 (`wlt profit-event`)
-
-| 命令 | 说明 | 关键参数 |
-|------|------|---------|
-| `wlt profit-event list` | 利润事件列表 | `--event-type`, `--status`, `--page-no`, `--page-size` |
-| `wlt profit-event statistics` | 利润统计 | 无 |
-| `wlt profit-event types` | 事件类型 | 无 |
-| `wlt profit-event retry --event-id <N>` | 重试事件 | `--event-id`（必填） |
-| `wlt profit-event clean-expired` | 清理过期事件 | 无 |
-| `wlt profit-event health` | 健康检查 | 无 |
-
-### 利润计算 (`wlt profit-calculation`)
-
-| 命令 | 说明 | 参数 |
-|------|------|------|
-| `wlt profit-calculation batch-recalculate-all` | 重新计算全部利润 | 无 |
+> operate-log / data-sync / profit-event / profit-calculation / job-trigger 等辅助模块命令见 [SKILL.md「辅助模块」](../SKILL.md)。

@@ -1,5 +1,7 @@
 # 销售采购 (sale / purchase)
 
+> 🔗 采购入库/销售出库是采购、销售主线的单据环节：上游为订单（`order main`），下游经运单签收进入结算；销售核算按客户+周期对运单计价。全链路见 [business-flows.md](./business-flows.md)。
+
 销售和采购模块均使用标准 CRUD 子命令模式（list / page-count / get / create / update / delete / update-status）。
 
 ## 共用查询参数（list / page-count）

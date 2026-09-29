@@ -1,5 +1,7 @@
 # 生产管理 (produce)
 
+> 🔗 生产单可关联订单与生产方案（`page --order-id/--plan-no`），完工后经质检（`quality-page`）入库形成库存，进入销售主线。全链路见 [business-flows.md](./business-flows.md)。
+
 ## 生产任务 (`wlt produce main`)
 
 | 命令 | 说明 | 关键参数 |

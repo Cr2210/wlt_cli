@@ -1,5 +1,7 @@
 # 财务管理 (finance)
 
+> 🔗 财务域是采购与物流两条主线的终点：结算单 → 收付款/开票申请/收开票 → 核销；预付付款单经 `order prepayment-relation` 关联订单。全链路见 [business-flows.md](./business-flows.md)。
+
 ## 财务账户 (`wlt finance account`)
 
 | 命令 | 说明 | 关键参数 |

@@ -1,5 +1,7 @@
 # 结算发票 (settlement / invoice)
 
+> 🔗 结算单上承已签收运单（`unsettle-waybill` / `available-waybill` 选单），下接开票申请（`finance invoice-apply`）与收付款/核销；物流结算单还是运费申请的来源。全链路见 [business-flows.md](./business-flows.md)。
+
 ## 运单结算 (`wlt settlement main`)
 
 ### list / page-count / export 共用筛选字段
@@ -18,15 +20,15 @@
 | `--project-name` | `projectName` | 项目名称（模糊） | 采购结算 |
 | `--settle-status` | `settleStatus` | 结算状态（如 `PART_SETTLED`；多选用逗号分隔） | 两者 |
 | `--invoice-status` | `invoiceStatus` | 发票状态（如 `PART_INVOICED`；多选用逗号分隔） | 两者 |
-| `--type` | `type` | **结算类型：`SALE_SETTLEMENT` / `PURCHASE_SETTLEMENT`** | 两者（区分子类型） |
-| `--settle-type` | `settleType` | **结算方式：`SALE` / `PURCHASE`** | 两者（注意 ≠ `type`） |
+| `--type` | `type` | **结算单类型：`SALE_SETTLEMENT`（销售结算单）/ `PURCHASE_SETTLEMENT`（采购结算单）** | 两者（单据方向） |
+| `--settle-type` | `settleType` | **结算明细类型：`PURCHASE` / `SALE` / `WAYBILL` / `ORDER` / `LOGISTICS_ORDER` / `IN_OUT_ORDER`**（结算单明细挂接的单据类型） | 两者（注意 ≠ `type`） |
 | `--metrics-name` | `metricsName` | 检测指标名 / 规格指标 | 两者 |
 | `--start-date` | `settlementDate[0]` | 结算日期起始（如 `2026-07-01 00:00:00`） | 两者 |
 | `--end-date` | `settlementDate[1]` | 结算日期结束（如 `2026-07-31 23:59:59` | 两者 |
 
 > ⚠️ 此前 CLI 的 `--settlement-no` 对应后端字段名实际为 `settlementNo`，与后端期望的 `no` 不一致，导致单号筛选从未生效。现修正为 `--no`。
 >
-> `--type` 与 `--settle-type` 为两个独立字段：`type` 区分销售/采购结算单（`SALE_SETTLEMENT` / `PURCHASE_SETTLEMENT`），`settle-type` 为结算方式（`SALE` / `PURCHASE`）。两者组合使用。
+> `--type` 与 `--settle-type` 为两个独立字段：`type` 区分销售/采购**结算单**（`SALE_SETTLEMENT` / `PURCHASE_SETTLEMENT`），`settle-type` 为**结算明细类型**（明细挂接的是运单/出入库单/订单等，枚举同后端 `ErpSettlementTypeEnum`）。两者组合使用。
 
 ### 子命令一览
 
@@ -86,6 +88,8 @@ wlt settlement main list \
 # 导出 Excel（参数同 list）
 wlt settlement main export --type SALE_SETTLEMENT --settle-status PART_SETTLED
 ```
+
+> ⚠️ 上方采购结算示例中的 `--settle-type SALE` 为抓包样例原值；`PURCHASE_SETTLEMENT` 单 + 明细类型 `SALE` 的组合语义待有效 token 实测确认。筛选不生效时可去掉 `--settle-type` 或换 `PURCHASE` 试。
 
 ### 忽略剩余（ignore-remainder）
 

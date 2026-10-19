@@ -214,12 +214,7 @@ func newWeightWaybillExportExcelCmd() *cobra.Command {
 			params := map[string]any{}
 			cmdutil.CollectStringFlags(cmd, params, "waybill-no", "license-plate", "weighing-no")
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/weight/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出运单称重失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/weight/export-excel", params)
 		},
 	}
 	c.Flags().StringVar(&waybillNo, "waybill-no", "", "运单号")

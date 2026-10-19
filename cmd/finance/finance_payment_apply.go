@@ -20,9 +20,13 @@ func init() {
 	financeCmd.AddCommand(financePaymentApplyCmd)
 	financePaymentApplyCmd.AddCommand(
 		newFinancePaymentApplyPageCmd(),
-		newFinancePaymentApplyPageCountCmd(),
 		newFinancePaymentApplyGetCmd(),
 		newFinancePaymentApplySummaryCmd(),
+		newFinancePaymentApplyExportExcelCmd(),
+		newFinancePaymentApplyCreateCmd(),
+		newFinancePaymentApplyUpdateCmd(),
+		newFinancePaymentApplyUpdateStatusCmd(),
+		newFinancePaymentApplyDeleteCmd(),
 	)
 }
 
@@ -45,27 +49,6 @@ var financePaymentApplyFilters = []cmdutil.FlagSpec{
 	{Name: "custom-order", Usage: "前端自定义排序规则"},
 	{Name: "keyword", Usage: "关键字"},
 	{Name: "headers", Usage: "自定义导出表头"},
-}
-
-// financePaymentApplyPageCountFilters is the same filter set minus export-only headers.
-var financePaymentApplyPageCountFilters = []cmdutil.FlagSpec{
-	{Name: "no", Usage: "申请单号"},
-	{Name: "partner-id", Usage: "合作伙伴 ID"},
-	{Name: "partner-name", Usage: "合作伙伴名称"},
-	{Name: "receipt-account-id", Usage: "收款账户 ID"},
-	{Name: "receipt-account-name", Usage: "收款账户名称"},
-	{Name: "receipt-account-no", Usage: "收款账户账号"},
-	{Name: "service-user-id", Usage: "财务负责人 ID"},
-	{Name: "service-user-name", Usage: "财务负责人名称"},
-	{Name: "approve-status", Usage: "审核状态"},
-	{Name: "pay-date", Usage: "付款日期"},
-	{Name: "remark", Usage: "备注"},
-	{Name: "creator-name", Usage: "创建人"},
-	{Name: "updater-name", Usage: "更新人"},
-	{Name: "create-time", Usage: "创建时间"},
-	{Name: "update-time", Usage: "更新时间"},
-	{Name: "custom-order", Usage: "前端自定义排序规则"},
-	{Name: "keyword", Usage: "关键字"},
 }
 
 func newFinancePaymentApplyPageCmd() *cobra.Command {
@@ -92,27 +75,6 @@ func newFinancePaymentApplyPageCmd() *cobra.Command {
 	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
 	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
 	addFinanceFilterFlags(c, financePaymentApplyFilters)
-	return c
-}
-
-func newFinancePaymentApplyPageCountCmd() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "page-count",
-		Short: "按筛选统计付款申请数量",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{}
-			collectFinanceFilters(cmd, params, financePaymentApplyPageCountFilters)
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-payment-apply/page-count", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计付款申请失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	addFinanceFilterFlags(c, financePaymentApplyPageCountFilters)
 	return c
 }
 
@@ -155,5 +117,125 @@ func newFinancePaymentApplySummaryCmd() *cobra.Command {
 		},
 	}
 	addFinanceFilterFlags(c, financePaymentApplyFilters)
+	return c
+}
+
+// ---- 导出 Excel ----
+
+func newFinancePaymentApplyExportExcelCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "export",
+		Short: "导出付款申请 Excel",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			params := map[string]any{}
+			collectFinanceFilters(cmd, params, financePaymentApplyFilters)
+			return cmdutil.RunExport(cmd, "/erp/finance-payment-apply/export-excel", params)
+		},
+	}
+	addFinanceFilterFlags(c, financePaymentApplyFilters)
+	return c
+}
+
+// ---- 创建 ----
+
+func newFinancePaymentApplyCreateCmd() *cobra.Command {
+	var data string
+	c := &cobra.Command{
+		Use:   "create",
+		Short: "创建付款申请",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			body, err := cmdutil.ParseJSONData(data)
+			if err != nil {
+				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
+			}
+			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/finance-payment-apply/create", body)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("创建付款申请失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&data, "data", "", "JSON 数据")
+	_ = c.MarkFlagRequired("data")
+	return c
+}
+
+// ---- 更新 ----
+
+func newFinancePaymentApplyUpdateCmd() *cobra.Command {
+	var data string
+	c := &cobra.Command{
+		Use:   "update",
+		Short: "更新付款申请",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			body, err := cmdutil.ParseJSONData(data)
+			if err != nil {
+				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
+			}
+			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-payment-apply/update", body)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("更新付款申请失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&data, "data", "", "JSON 数据")
+	_ = c.MarkFlagRequired("data")
+	return c
+}
+
+// ---- 处理申请（query 参数：id + approveStatus） ----
+
+func newFinancePaymentApplyUpdateStatusCmd() *cobra.Command {
+	var id int64
+	var approveStatus int
+	c := &cobra.Command{
+		Use:   "update-status",
+		Short: "处理付款申请",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			resp, err := cmdutil.GetClient().PutQuery(context.Background(), "/erp/finance-payment-apply/update-status",
+				map[string]any{"id": id, "approveStatus": approveStatus})
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("处理付款申请失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().Int64Var(&id, "id", 0, "付款申请 ID")
+	c.Flags().IntVar(&approveStatus, "approve-status", 0, "审核状态值")
+	_ = c.MarkFlagRequired("id")
+	_ = c.MarkFlagRequired("approve-status")
+	return c
+}
+
+// ---- 删除（query 参数：ids） ----
+
+func newFinancePaymentApplyDeleteCmd() *cobra.Command {
+	var ids string
+	c := &cobra.Command{
+		Use:   "delete",
+		Short: "删除付款申请",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/finance-payment-apply/delete", map[string]any{"ids": ids})
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("删除付款申请失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&ids, "ids", "", "ID 列表（逗号分隔）")
+	_ = c.MarkFlagRequired("ids")
 	return c
 }

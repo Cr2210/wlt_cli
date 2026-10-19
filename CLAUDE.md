@@ -28,7 +28,7 @@ cmd/                    # Cobra 命令层，每个业务域一个独立 Go 包
 ├── completion.go       # Shell 自动补全
 ├── help.go             # 中文帮助
 ├── config/             # 配置命令（init/show/set）
-├── system/             # 系统管理（user/dept/role/menu/dict）
+├── system/             # 系统管理（user/dept/role/menu/dict + ERP 关联账号 account/称重账号 weight-account）
 ├── stock/              # 库存管理（warehouse/query/in/out/move/check/record）
 ├── product/            # 产品管理（product/unit/category/metrics）
 ├── contract/           # 合同管理（main/provision/service/transport）
@@ -42,11 +42,12 @@ cmd/                    # Cobra 命令层，每个业务域一个独立 Go 包
 ├── finance/            # 财务管理（account/payment/receipt/refund/settlement/write-off/invoice-apply/freight-apply）
 ├── waybill/            # 运单管理（source/push-config）
 ├── order/              # 订单管理（main/plan/prepayment-relation）
+├── position/           # 位置服务（运单车辆轨迹 latest/history-follow）
 ├── produce/            # 生产管理（main/plan）
 ├── quality/            # 质检管理（inspection/weight）
 ├── weight/             # 称重管理（waybill）
 ├── settlement/         # 结算管理（main/logistics：结算单/物流结算单）
-├── invoice/            # 发票管理（main）
+├── invoice/            # 发票管理（main + item 明细）
 ├── homepage/           # 首页数据总览（dashboard1-6/inventory-backlog/product-ranking）
 ├── operate_log/        # 操作日志查询
 ├── job_trigger/        # 定时任务触发

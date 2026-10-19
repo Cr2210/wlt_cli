@@ -285,12 +285,7 @@ func newOrderPlanExportExcelCmd() *cobra.Command {
 			cmdutil.CollectStringFlags(cmd, params, "no", "product-id", "supplier-id", "customer-id")
 			cmdutil.CollectPlanDateRange(cmd, params)
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/order-plan/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出订单计划失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/order-plan/export-excel", params)
 		},
 	}
 	c.Flags().StringVar(&no, "no", "", "计划单号")

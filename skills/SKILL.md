@@ -364,6 +364,17 @@ Step 3 → 执行命令
   - 库存：`stock query page-count / detail-count / stock-record-count`、`stock record page-count / record-page / total-cost`
   - 单据域：stock in/out/move/check、purchase in/return、sale out/return 现均含 `page-count`
 
+### 🛠 Round 2 变更（2026-10-19，待有效 token 实测）
+- **财务三模块补全写命令**：`finance invoice / payment-apply / prepayment-apply` 各含
+  `create / update / update-status / delete`（update-status 走 query 参数：invoice 为 `--id --status`，两 apply 为 `--id --approve-status`）+ `export`
+- **删除漂移子命令**：三模块的 `page-count` 已删（后端 ge-dev-1.8 已无对应端点，属端点漂移）
+- **改名**：`finance prepayment-apply list` → `page`（对齐 finance 域分页主名）
+- **export 统一协议**：全局 `--output/-o <文件>` 写 Excel 文件 + stdout 信封 `{"data":{"file":...,"bytes":N}}`，
+  未指定 `-o` 时自动命名 `wlt-export-<时间戳>.xlsx`；旧的「导出成功，返回数据」文本输出已全部移除
+- **新增模块/命令**：`position`（latest-follow / history-follow）、`system account`（list + 8 个详情）、
+  `system weight-account get`、`waybill events / order-info`、`invoice item list`、
+  `screen` 补 6 个（line / line-price / purchase-enterprise / purchase-in-price / purchase-in-product / settle-amount）
+
 ## 详细参考（按需读取）
 
 - [references/business-flows.md](./references/business-flows.md) — 业务主线与数据关联（采购/销售/物流全链路、三处选运单对比）

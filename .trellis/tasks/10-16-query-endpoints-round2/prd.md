@@ -4,6 +4,25 @@
 > 来源：`docs/superpowers/specs/2026-06-27-query-endpoints-backlog.md`（superpowers 交接文档，2026-06-27）。
 > 原始文档已从仓库删除，本文档为其内容的 Trellis 化保留（第 2 轮部分逐字保留）。
 
+## 范围锁定（2026-10-19，盘点后拍板）
+
+以后端仓库 `ge-dev-1.8` 为事实源的逐条盘点见 `research/01-endpoint-inventory.md`。
+原清单约 31 端点中 9 个已完成、1 个移出、3 个漂移；用户拍板（均取推荐方案）：
+
+1. **system/account**：只做 9 个查询端点（sendSms/create/delete 不做，留后续任务）
+2. **weight-account**：只做 `get`（`save` 不做）
+3. **待决策 2 → 方案 A**：本轮补全财务三模块（invoice / payment-apply / prepayment-apply）
+   全部写命令（create/update/update-status/delete + 缺失的 export），并**删除 3 个漂移的
+   page-count 子命令**（后端已无对应端点，见 research/02）
+4. **`-o` 方案**：本轮落地全局 `--output/-o` flag + 公共 helper + 统一改造现有 23 处
+   `fmt.Println` 临时形态；后端有而 CLI 尚无 export 命令的模块**不在本轮补**
+5. **待决策 1 已关闭**：合同域重构已切独立端点（`cmd/contract/contract_main.go:24,39`），
+   无需开发，仅留 token 实测
+6. **finance-record/init 移出 A 类**（后端实为无参初始化写操作，`research/01` #22）
+
+最终实施范围 = **19 个查询命令 + 财务三模块约 15 个写/export 命令 + 删 3 个漂移 page-count
++ `-o` 方案落地与 23 处改造**。参数事实源 = 后端 Controller（erp.md 已不存在）。
+
 ## Goal
 
 按 `D:\Download\erp.md`（Swagger 导出，510 端点：GET 303 / POST 65 / PUT 92 / DELETE 50）

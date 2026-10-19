@@ -308,12 +308,7 @@ func newFinanceReceiptPaymentExportExcelCmd() *cobra.Command {
 			}
 			params := map[string]any{}
 			collectFinanceFilters(cmd, params, financeReceiptPaymentFilters)
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-receipt-payment/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出收付款失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/finance-receipt-payment/export-excel", params)
 		},
 	}
 	addFinanceFilterFlags(c, financeReceiptPaymentFilters)

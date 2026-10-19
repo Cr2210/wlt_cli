@@ -183,12 +183,7 @@ func newFinanceAccountSettlementExportExcelCmd() *cobra.Command {
 			params := map[string]any{}
 			cmdutil.CollectStringFlags(cmd, params, "account-id", "settlement-no", "business-no", "business-id", "type")
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/account-settlement/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出账户结算失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/account-settlement/export-excel", params)
 		},
 	}
 	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")

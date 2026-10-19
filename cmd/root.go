@@ -16,6 +16,7 @@ import (
 	"github.com/weiliantong/cli/cmd/job_trigger"
 	"github.com/weiliantong/cli/cmd/operate_log"
 	"github.com/weiliantong/cli/cmd/order"
+	"github.com/weiliantong/cli/cmd/position"
 	"github.com/weiliantong/cli/cmd/produce"
 	"github.com/weiliantong/cli/cmd/product"
 	"github.com/weiliantong/cli/cmd/profit"
@@ -91,6 +92,7 @@ func init() {
 	rootCmd.PersistentFlags().String("token", "", "访问令牌(对应 Authorization: Bearer 头,必填)")
 	rootCmd.PersistentFlags().String("tenant-id", "", "租户 ID(对应 tenant-id 头,必填)")
 	rootCmd.PersistentFlags().String("base-url", "", "可选,覆盖 profile 的 base_url")
+	rootCmd.PersistentFlags().StringP("output", "o", "", "导出文件写入路径(export 命令生效;缺省用自动文件名)")
 
 	// 基础设施
 	configcmd.Register(rootCmd)
@@ -106,6 +108,7 @@ func init() {
 	jobtrigger.Register(rootCmd)
 	operatelog.Register(rootCmd)
 	order.Register(rootCmd)
+	position.Register(rootCmd)
 	produce.Register(rootCmd)
 	product.Register(rootCmd)
 	profit.Register(rootCmd)

@@ -356,12 +356,7 @@ func newProduceMainExportExcelCmd() *cobra.Command {
 				"headers",
 			)
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出生产任务失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/produce/export-excel", params)
 		},
 	}
 	c.Flags().String("no", "", "生产编号")
@@ -563,12 +558,7 @@ func newProduceMainQualityExportExcelCmd() *cobra.Command {
 				"headers",
 			)
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce/quality-export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出生产质检失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/produce/quality-export-excel", params)
 		},
 	}
 	c.Flags().String("no", "", "生产任务编号")

@@ -261,12 +261,7 @@ func newSysUserExportCmd() *cobra.Command {
 			if err := cmdutil.EnsureClient(); err != nil {
 				return err
 			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/system/user/export-excel", nil)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出用户失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/system/user/export-excel", nil)
 		},
 	}
 	return c

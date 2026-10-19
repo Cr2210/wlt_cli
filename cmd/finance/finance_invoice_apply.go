@@ -268,12 +268,7 @@ func newFinanceInvoiceApplyExportExcelCmd() *cobra.Command {
 			params := map[string]any{}
 			collectFinanceFilters(cmd, params, financeInvoiceApplyFilters)
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice-apply/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出开票申请失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/finance-invoice-apply/export-excel", params)
 		},
 	}
 	addFinanceFilterFlags(c, financeInvoiceApplyFilters)

@@ -244,12 +244,7 @@ func newSaleAccountingExportExcelCmd() *cobra.Command {
 			}
 			params := collectSaleAccountingListParams(cmd, 0, 0, false)
 			cmdutil.CollectStringFlags(cmd, params, "headers")
-			resp, err := cmdutil.GetClient().Get(context.Background(), saleAccountingAPIPath+"/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出销售核算单失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, saleAccountingAPIPath+"/export-excel", params)
 		},
 	}
 	registerSaleAccountingListFlags(c)

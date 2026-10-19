@@ -152,12 +152,7 @@ func newQualityWeightOrderExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := buildWeightParams(cmd, false, 0, 0, "")
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/quality-inspection-weight/export-excel-order", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出订单称重失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/quality-inspection-weight/export-excel-order", params)
 		},
 	}
 	registerWeightFilterFlags(c, true)
@@ -222,12 +217,7 @@ func newQualityWeightWaybillExportExcelCmd() *cobra.Command {
 				return err
 			}
 			params := buildWeightParams(cmd, false, 0, 0, "")
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/quality-inspection-weight/export-excel-waybill", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出运单称重失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/quality-inspection-weight/export-excel-waybill", params)
 		},
 	}
 	registerWeightFilterFlags(c, false)

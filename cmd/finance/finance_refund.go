@@ -310,12 +310,7 @@ func newFinanceRefundExportExcelCmd() *cobra.Command {
 			}
 			params := map[string]any{}
 			collectFinanceFilters(cmd, params, financeRefundFilters)
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-refund/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出退款单失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/finance-refund/export-excel", params)
 		},
 	}
 	addFinanceFilterFlags(c, financeRefundFilters)

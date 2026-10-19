@@ -246,12 +246,7 @@ func newInvoiceMainExportExcelCmd() *cobra.Command {
 			params := map[string]any{}
 			cmdutil.CollectStringFlags(cmd, params, "invoice-no", "customer-id", "supplier-id", "status", "type")
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/invoice/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出发票失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/invoice/export-excel", params)
 		},
 	}
 	c.Flags().StringVar(&invoiceNo, "invoice-no", "", "发票号")

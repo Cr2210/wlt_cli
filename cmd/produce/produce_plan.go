@@ -347,12 +347,7 @@ func newProducePlanExportExcelCmd() *cobra.Command {
 				"headers",
 			)
 
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/produce-plan/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出生产方案失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/produce-plan/export-excel", params)
 		},
 	}
 	c.Flags().String("plan-no", "", "方案编号")

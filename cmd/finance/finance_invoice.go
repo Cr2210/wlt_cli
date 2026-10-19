@@ -20,10 +20,13 @@ func init() {
 	financeCmd.AddCommand(financeInvoiceCmd)
 	financeInvoiceCmd.AddCommand(
 		newFinanceInvoicePageCmd(),
-		newFinanceInvoicePageCountCmd(),
 		newFinanceInvoiceGetCmd(),
 		newFinanceInvoiceSummaryCmd(),
 		newFinanceInvoiceExportExcelCmd(),
+		newFinanceInvoiceCreateCmd(),
+		newFinanceInvoiceUpdateCmd(),
+		newFinanceInvoiceUpdateStatusCmd(),
+		newFinanceInvoiceDeleteCmd(),
 	)
 }
 
@@ -50,8 +53,8 @@ var financeInvoiceFilters = []cmdutil.FlagSpec{
 	{Name: "headers", Usage: "自定义导出表头"},
 }
 
-// financeInvoicePageCountFilters 去掉了 headers。
-var financeInvoicePageCountFilters = []cmdutil.FlagSpec{
+// financeInvoiceQueryFilters 去掉了 headers，用于 summary。
+var financeInvoiceQueryFilters = []cmdutil.FlagSpec{
 	{Name: "no", Usage: "收开票号"},
 	{Name: "type", Usage: "业务类别(INVOICE_PAYMENT=收票/INVOICE_RECEIPT=开票/...)"},
 	{Name: "invoice-type", Usage: "发票类型(SPECIAL_INVOICE/GENERAL_INVOICE/RECEIPT)"},
@@ -101,29 +104,6 @@ func newFinanceInvoicePageCmd() *cobra.Command {
 	return c
 }
 
-// ---- 分页计数 ----
-
-func newFinanceInvoicePageCountCmd() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "page-count",
-		Short: "按筛选统计收开票数量",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{}
-			collectFinanceFilters(cmd, params, financeInvoicePageCountFilters)
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice/page-count", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("统计收开票失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	addFinanceFilterFlags(c, financeInvoicePageCountFilters)
-	return c
-}
-
 // ---- 获取详情 ----
 
 func newFinanceInvoiceGetCmd() *cobra.Command {
@@ -159,7 +139,7 @@ func newFinanceInvoiceSummaryCmd() *cobra.Command {
 				return err
 			}
 			params := map[string]any{}
-			collectFinanceFilters(cmd, params, financeInvoicePageCountFilters)
+			collectFinanceFilters(cmd, params, financeInvoiceQueryFilters)
 			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice/summary", params)
 			if err != nil {
 				return output.NewExitError(5, fmt.Sprintf("获取收开票合计失败: %s", err), "")
@@ -167,7 +147,7 @@ func newFinanceInvoiceSummaryCmd() *cobra.Command {
 			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
 		},
 	}
-	addFinanceFilterFlags(c, financeInvoicePageCountFilters)
+	addFinanceFilterFlags(c, financeInvoiceQueryFilters)
 	return c
 }
 
@@ -178,20 +158,116 @@ func newFinanceInvoiceExportExcelCmd() *cobra.Command {
 		Use:   "export",
 		Short: "导出收开票 Excel",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
 			params := map[string]any{}
 			collectFinanceFilters(cmd, params, financeInvoiceFilters)
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-invoice/export-excel", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("导出收开票失败: %s", err), "")
-			}
-			fmt.Println("导出成功，返回数据：", string(resp.Data))
-			return nil
+			return cmdutil.RunExport(cmd, "/erp/finance-invoice/export-excel", params)
 		},
 	}
 	addFinanceFilterFlags(c, financeInvoiceFilters)
+	return c
+}
+
+// ---- 创建 ----
+
+func newFinanceInvoiceCreateCmd() *cobra.Command {
+	var data string
+	c := &cobra.Command{
+		Use:   "create",
+		Short: "创建收开票",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			body, err := cmdutil.ParseJSONData(data)
+			if err != nil {
+				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
+			}
+			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/finance-invoice/create", body)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("创建收开票失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&data, "data", "", "JSON 数据")
+	_ = c.MarkFlagRequired("data")
+	return c
+}
+
+// ---- 更新 ----
+
+func newFinanceInvoiceUpdateCmd() *cobra.Command {
+	var data string
+	c := &cobra.Command{
+		Use:   "update",
+		Short: "更新收开票",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			body, err := cmdutil.ParseJSONData(data)
+			if err != nil {
+				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
+			}
+			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-invoice/update", body)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("更新收开票失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&data, "data", "", "JSON 数据")
+	_ = c.MarkFlagRequired("data")
+	return c
+}
+
+// ---- 更新状态（query 参数：id + status） ----
+
+func newFinanceInvoiceUpdateStatusCmd() *cobra.Command {
+	var id int64
+	var status int
+	c := &cobra.Command{
+		Use:   "update-status",
+		Short: "更新收开票审核状态",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			resp, err := cmdutil.GetClient().PutQuery(context.Background(), "/erp/finance-invoice/update-status",
+				map[string]any{"id": id, "status": status})
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("更新收开票状态失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().Int64Var(&id, "id", 0, "收开票 ID")
+	c.Flags().IntVar(&status, "status", 0, "状态值")
+	_ = c.MarkFlagRequired("id")
+	_ = c.MarkFlagRequired("status")
+	return c
+}
+
+// ---- 删除（query 参数：ids） ----
+
+func newFinanceInvoiceDeleteCmd() *cobra.Command {
+	var ids string
+	c := &cobra.Command{
+		Use:   "delete",
+		Short: "删除收开票",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/finance-invoice/delete", map[string]any{"ids": ids})
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("删除收开票失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&ids, "ids", "", "ID 列表（逗号分隔）")
+	_ = c.MarkFlagRequired("ids")
 	return c
 }
 

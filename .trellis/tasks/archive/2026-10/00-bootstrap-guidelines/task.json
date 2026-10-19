@@ -1,0 +1,39 @@
+{
+  "id": "00-bootstrap-guidelines",
+  "name": "00-bootstrap-guidelines",
+  "title": "Bootstrap Guidelines",
+  "description": "Fill in project development guidelines for AI agents",
+  "status": "completed",
+  "dev_type": "docs",
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-10-16",
+  "completedAt": "2026-10-19",
+  "branch": null,
+  "base_branch": null,
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "10-16-superpowers-to-trellis",
+    "10-16-stateless-auth",
+    "10-16-stock-cmd-optimization",
+    "10-16-order-prepayment-relation",
+    "10-16-backend-sync-0923"
+  ],
+  "parent": null,
+  "relatedFiles": [
+    ".trellis/spec/cli/",
+    ".trellis/spec/internal/",
+    ".trellis/spec/guides/"
+  ],
+  "notes": "First-time setup task created by trellis init (fullstack project) — spec layers reshaped to cli/ + internal/ by task 10-16-superpowers-to-trellis (2026-10-16).",
+  "meta": {
+    "spec_layers": "cli,internal",
+    "reshaped_by": "10-16-superpowers-to-trellis"
+  }
+}

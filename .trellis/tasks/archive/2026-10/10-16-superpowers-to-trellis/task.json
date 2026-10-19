@@ -1,0 +1,29 @@
+{
+  "id": "superpowers-to-trellis",
+  "name": "superpowers-to-trellis",
+  "title": "清理 superpowers 残留并将文档迁移至 Trellis 体系",
+  "description": "删除项目内 superpowers 残留(.superpowers/、.flow/、docs/superpowers/)，把其中持久约定提炼进 .trellis/spec/(改造为 cli/ + internal/ 结构)，已完成计划归档为 Trellis 任务形态",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-10-16",
+  "completedAt": "2026-10-19",
+  "branch": "main",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "verified_at": "2026-10-19",
+    "acceptance": "12条验收全部通过:残留清零/spec两层中文/锚点抽查命中/4任务归档/go build OK/platforms仅ClaudeCode"
+  }
+}

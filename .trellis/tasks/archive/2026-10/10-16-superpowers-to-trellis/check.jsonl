@@ -1,0 +1,6 @@
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/00-index.md", "reason": "校验时的分片导航：把 spec 中的每条断言回溯到对应研究分片与锚点"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/05-spec-layout-and-drift.md", "reason": "重点核对：spec 是否引入了 §C 列出的 10 条漂移（退出码 6、legacy 工厂、统一 list 命名、--headers 全覆盖等）"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/01-auth-contract.md", "reason": "核对鉴权与退出码断言：实际产出仅 1/2/4/5，3 与 6 无产出路径"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/02-structure-and-factories.md", "reason": "核对工厂调用点与判据是否与代码一致（DocumentCmds 8 处、AddCRUDToParent 仅 2 处、NewCRUDGroup 4 处）"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/03-flags-and-output.md", "reason": "核对 flag 映射与输出协议断言，含裸数组危险与两套时间 helper 并存"}
+{"file": ".trellis/spec/guides/index.md", "reason": "校验方法与 AI 评审假阳性清单：每条 CRITICAL/WARNING 断言必须回到真实代码验证，不凭文档自述判定"}

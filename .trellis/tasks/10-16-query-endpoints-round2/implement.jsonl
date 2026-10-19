@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/cli/index.md", "reason": "cli 层入口：新命令的 Pre-Development Checklist 与工厂/flag/输出约定的索引"}
+{"file": ".trellis/spec/cli/backend-sync-playbook.md", "reason": "本任务即该 playbook 的落地：差异分析方法、A/B/排除分类、挂载决策与 Swagger 取参流程"}
+{"file": ".trellis/spec/cli/command-factories.md", "reason": "第 2 轮端点多为标准查询：用哪个 CRUD 工厂的选型判据与真实调用点"}
+{"file": ".trellis/spec/cli/flags-and-params.md", "reason": "kebab→camel、时间数组、分页 flag、--data 与 Put/PutQuery 判据"}
+{"file": ".trellis/spec/cli/output-protocol.md", "reason": "ParsePagedJSON vs OutputJSON 的选择（含裸数组响应）；export 非 JSON 信封的已知例外"}
+{"file": ".trellis/spec/internal/auth-and-client.md", "reason": "每条业务命令的 EnsureClient 鉴权契约与退出码 4/5 语义"}

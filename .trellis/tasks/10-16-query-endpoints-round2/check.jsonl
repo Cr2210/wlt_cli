@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/cli/quality-guidelines.md", "reason": "flag 装配测试与命令树核对的验收方式"}
+{"file": ".trellis/spec/cli/output-protocol.md", "reason": "校验分页/非分页端点选择与退出码使用是否正确"}
+{"file": ".trellis/spec/cli/flags-and-params.md", "reason": "校验 flag 命名与传参映射（camelCase、时间数组、Put/PutQuery）"}
+{"file": ".trellis/spec/cli/index.md", "reason": "cli 层 Quality Check 清单"}

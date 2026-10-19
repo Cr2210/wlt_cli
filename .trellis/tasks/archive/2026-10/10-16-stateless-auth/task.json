@@ -1,0 +1,31 @@
+{
+  "id": "stateless-auth",
+  "name": "stateless-auth",
+  "title": "无状态鉴权重构",
+  "description": "把 wlt 的交互式登录鉴权改为无状态鉴权（--token/--tenant-id 直传），删除 cmd/auth、internal/auth 与凭证持久化。2026-06-26 交付，历史归档。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-06-26",
+  "completedAt": "2026-10-16",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "00-bootstrap-guidelines",
+  "relatedFiles": [],
+  "notes": "历史归档：来自 superpowers 设计文档 docs/superpowers/specs/2026-06-26-stateless-auth-design.md（交付 2026-06-26，commit c4b0c0e）。已完成，非待办。",
+  "meta": {
+    "source_doc": "docs/superpowers/specs/2026-06-26-stateless-auth-design.md",
+    "original_date": "2026-06-26",
+    "commit": "c4b0c0e",
+    "archived_from": "superpowers"
+  }
+}

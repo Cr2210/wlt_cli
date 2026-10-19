@@ -1,0 +1,29 @@
+{
+  "id": "query-endpoints-round2",
+  "name": "query-endpoints-round2",
+  "title": "第 2 轮查询端点对接与 export 下载方案",
+  "description": "开放待办：对接约 31 个 JSON 查询端点、约 40 个 export-excel 端点（阻塞于 -o 下载方案），并处理 service-contract/transport-contract 路径归属与新财务模块写命令两处待决策。",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-10-16",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "开放待办：来源 docs/superpowers/specs/2026-06-27-query-endpoints-backlog.md（2026-06-27 交接文档第 2 轮部分）。状态 planning，本任务不实施其内容。",
+  "meta": {
+    "source_doc": "docs/superpowers/specs/2026-06-27-query-endpoints-backlog.md",
+    "original_date": "2026-06-27"
+  }
+}

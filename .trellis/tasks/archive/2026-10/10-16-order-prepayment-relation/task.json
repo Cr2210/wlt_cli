@@ -1,0 +1,31 @@
+{
+  "id": "order-prepayment-relation",
+  "name": "order-prepayment-relation",
+  "title": "订单预付关联命令",
+  "description": "在 order 域新增 wlt order prepayment-relation 命令组，覆盖后端 /erp/order-prepayment-relation 的 5 个接口。2026-08-21 交付，历史归档。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-08-21",
+  "completedAt": "2026-10-16",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "00-bootstrap-guidelines",
+  "relatedFiles": [],
+  "notes": "历史归档：来自 superpowers 设计+计划文档（交付 2026-08-21，commit af07f87/bb1a8df/2d8814b）。已完成，非待办。",
+  "meta": {
+    "source_doc": "docs/superpowers/specs/2026-08-21-order-prepayment-relation-design.md + docs/superpowers/plans/2026-08-21-order-prepayment-relation.md",
+    "original_date": "2026-08-21",
+    "commit": "af07f87,bb1a8df,2d8814b",
+    "archived_from": "superpowers"
+  }
+}

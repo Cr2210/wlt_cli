@@ -1,0 +1,31 @@
+{
+  "id": "backend-sync-0923",
+  "name": "backend-sync-0923",
+  "title": "后端 0923 基线同步",
+  "description": "对接后端 2026-09-23 基线：新增物流结算、销售核算、运费申请三个命令组，加结算忽略剩余、预付关联 biz-type、收付款 is-prepaid 三处增量。2026-09-28 交付，历史归档。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-09-28",
+  "completedAt": "2026-10-16",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "00-bootstrap-guidelines",
+  "relatedFiles": [],
+  "notes": "历史归档：来自 superpowers 设计+计划文档（交付 2026-09-28，commit 40de0c9/4888596/13e7f7e/67aa36a/cbd785b）。已完成，非待办。",
+  "meta": {
+    "source_doc": "docs/superpowers/specs/2026-09-28-backend-sync-0923-design.md + docs/superpowers/plans/2026-09-28-backend-sync-0923.md",
+    "original_date": "2026-09-28",
+    "commit": "40de0c9,4888596,13e7f7e,67aa36a,cbd785b",
+    "archived_from": "superpowers"
+  }
+}

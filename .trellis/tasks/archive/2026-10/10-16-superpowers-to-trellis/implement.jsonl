@@ -1,0 +1,9 @@
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/00-index.md", "reason": "研究产物导航与交叉引用对照表：§/A-D 各段落在哪个分片，写 spec 时按此定位锚点"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/01-auth-contract.md", "reason": "鉴权契约与退出码现实（实际产出仅 1/2/4/5）→ 写 internal/auth-and-client.md 与 internal/output-and-errors.md"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/02-structure-and-factories.md", "reason": "分包/注册约定与 5 条工厂选型判据 + 真实调用点 → 写 cli/directory-structure.md 与 cli/command-factories.md"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/03-flags-and-output.md", "reason": "flag 命名/kebab→camel/时间数组/分页/ParsePagedJSON 判据 → 写 cli/flags-and-params.md 与 cli/output-protocol.md"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/04-sync-methodology-and-tests.md", "reason": "后端基线同步方法论与测试/验证约定 → 写 cli/backend-sync-playbook.md 与两层 quality-guidelines.md"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/05-spec-layout-and-drift.md", "reason": "spec 布局建议 + 源映射 + 10 条矛盾/漂移清单：写 spec 时严禁照抄这些漂移，必须写代码现实"}
+{"file": ".trellis/tasks/10-16-superpowers-to-trellis/research/06-backlog-facts.md", "reason": "第 2 轮端点清单与两处待决策 → 写开放任务 query-endpoints-round2 的 prd.md"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "写 spec 时的复用判据：同一约定不得在 cli/internal 多层重复表述，避免制造新的漂移源"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "cli 层与 internal 层的职责边界划分依据：client/config 契约归 internal，命令与 flag 归 cli，不得交叉混写"}

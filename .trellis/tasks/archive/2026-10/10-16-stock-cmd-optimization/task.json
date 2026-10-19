@@ -1,0 +1,31 @@
+{
+  "id": "stock-cmd-optimization",
+  "name": "stock-cmd-optimization",
+  "title": "库存命令优化",
+  "description": "把全仓单据命令归一到通用工厂 DocumentCmds，消除 stock 手写样板与命名/headers/解析不一致，重构 stock query/record，删除 legacy 工厂。2026-08-07 交付，历史归档。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "peng",
+  "assignee": "peng",
+  "createdAt": "2026-08-07",
+  "completedAt": "2026-10-16",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "00-bootstrap-guidelines",
+  "relatedFiles": [],
+  "notes": "历史归档：来自 superpowers 设计+计划文档（交付 2026-08-07，commit eb2d679..9e586d9）。已完成，非待办。",
+  "meta": {
+    "source_doc": "docs/superpowers/specs/2026-08-07-stock-cmd-optimization-design.md + docs/superpowers/plans/2026-08-07-stock-cmd-optimization.md",
+    "original_date": "2026-08-07",
+    "commit": "eb2d679..9e586d9",
+    "archived_from": "superpowers"
+  }
+}

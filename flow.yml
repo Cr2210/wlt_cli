@@ -1,0 +1,86 @@
+# =============================================================================
+# 云效 Flow 发布流水线（本文件为仓库侧唯一事实源，接入时整体粘贴到 Flow 控制台）
+# 同步义务：控制台副本不会自动跟随本文件——修改本文件后，须重新整体粘贴到 Flow 控制台并校验保存。
+#
+# 用途：
+#   推送 v* tag 后自动触发，用 GoReleaser 构建与 GitHub Actions 完全一致的全平台产物，
+#   归档为流水线构建产物（云效公共存储空间）供下载：
+#     wlt-linux-amd64.tar.gz / wlt-linux-arm64.tar.gz
+#     wlt-darwin-amd64.tar.gz / wlt-darwin-arm64.tar.gz
+#     wlt-windows-amd64.zip / checksums.txt / wlt-skills.zip
+#   只构建不发布：不访问 GitHub API、不需要任何 GitHub 凭据、不产生 GitHub Release。
+#
+# 触发方式：
+#   git tag v0.2.0 && git push origin v0.2.0
+#   仅 v 开头的 tag 触发（branchesFilter: '^v'）；push 到分支不触发发布流水线。
+#
+# 接入方式（Flow 控制台一次性操作，详细步骤见 docs/yunxiao-release.md）：
+#   1. 云效 Flow → 我的流水线 → 新建流水线 → 选择「YAML 化编排」（任选一个 Go 模板）
+#   2. 进入 YAML 编辑页，把本文件内容整体粘贴到左侧编辑器
+#   3. 替换下方两处 <...> 占位符：
+#        a) sources.repo.endpoint —— CodeUp 仓库的 HTTPS 克隆地址
+#        b) sources.repo.certificate.serviceConnection —— 服务连接 ID
+#           （企业设置 → 服务连接管理 中创建/复制，类型选 CodeUp）
+#   4. 点击「校验」通过后保存；此后推送 v* tag 即自动构建
+# =============================================================================
+
+sources:
+  repo:
+    type: codeup
+    name: wlt_cli 代码源                     # 代码源展示名（≤30 字符）
+    endpoint: "https://<codeup 仓库地址>.git" # 【占位符】替换为 CodeUp 仓库 HTTPS 克隆地址
+    branch: main                             # 默认分支（手工运行时使用）
+    triggerEvents:
+      - tagPush                              # Tag 创建（推送 tag）时触发
+    branchesFilter: '^v'                     # 仅 v 开头的 tag 触发（对齐 GitHub Actions on.push.tags: v*）
+    certificate:
+      type: serviceConnection
+      serviceConnection: "<服务连接ID>"       # 【占位符】企业设置 → 服务连接管理 中获取
+
+stages:
+  release_stage:
+    name: GoReleaser 构建与归档
+    jobs:
+      release_job:
+        name: 构建全平台产物
+        runsOn: public/cn-beijing            # 云效公共构建集群（北京），容器环境、root 用户
+        steps:
+          golang_build:
+            step: GolangBuild
+            name: GoReleaser 构建
+            workspace: repo                  # 指向 sources.repo 的代码检出（单源时默认即 defaultWorkspace）
+            with:
+              run: |
+                set -e
+
+                # 国内网络：Go 模块与工具链下载统一走 goproxy.cn；
+                # GOTOOLCHAIN=auto 允许按 go.mod 声明（go 1.26.4）自动下载对应工具链
+                export GOPROXY=https://goproxy.cn,direct
+                export GOTOOLCHAIN=auto
+
+                # 防御性安装 zip（.goreleaser.yml 的 before hook 用它打 wlt-skills.zip；
+                # 公共构建集群容器为 root，可直接 apt 安装）
+                command -v zip >/dev/null 2>&1 || { apt-get update -y && apt-get install -y zip; }
+
+                # goreleaser 经 go install 走 goproxy.cn 安装（不直连 GitHub 下载二进制）。
+                # 如需固定版本，把 @latest 换成 @v2.x.y（见 docs/yunxiao-release.md）
+                go install github.com/goreleaser/goreleaser/v2@latest
+                export PATH="$(go env GOPATH)/bin:$PATH"
+
+                # 必须用 release 模式 + --skip=publish，禁用 --snapshot：
+                #   - --skip=publish：只构建不发布，不访问 GitHub API，无需任何 GitHub 凭据
+                #   - --snapshot：内嵌版本号会变成 X.Y.(Z+1)-snapshot（版本错位），禁止使用
+                #   - release 模式前提：HEAD 恰好在 tag 上（tagPush 触发满足）、
+                #     工作区干净、git 历史含 tags（Flow 默认全量克隆满足）
+                echo "构建 tag：${CI_COMMIT_REF_NAME}"
+                goreleaser release --clean --skip=publish
+
+          upload_dist:
+            step: ArtifactUpload
+            name: 归档构建产物
+            with:
+              uploadType: flowPublic         # 归档至云效公共存储空间，运行详情页可下载
+              artifact: wlt-dist             # 制品名
+              filePath:                      # 项目根相对路径，可多个
+                - dist/
+                - wlt-skills.zip

@@ -102,6 +102,10 @@ skills/                 # AI Agent Skills Markdown
 
 ## 发布流程（云效 CodeUp）
 
+### 云效 Flow 自动构建（推荐）
+
+推送 `v*` tag 到 CodeUp 后，云效 Flow 流水线自动用 GoReleaser 构建全平台产物，产物从**流水线运行详情 → 构建产物**下载，无需本地构建和手动上传。仓库根目录 `flow.yml` 为流水线唯一事实源，一次性接入步骤见 `docs/yunxiao-release.md`。下方本地构建流程保留为后备方案。
+
 ### 前置准备
 
 一次性安装 GoReleaser：

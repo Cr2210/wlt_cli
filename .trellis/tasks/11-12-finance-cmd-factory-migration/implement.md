@@ -58,10 +58,42 @@ cmdutil.CrudDeleteCmd("/erp/finance-payment-apply", "付款申请", false),
 
 对每条命令按 `design.md` §3 的 7 条判据检查；**满足才换，不满足保留并在 commit message 里说明**。不要为了凑数强行替换。
 
+### 实际执行结果（已回填）
+
+- **`finance_account.go` 试替换后回退**：`delete` 换成 `CrudDeleteCmd(…, true)` 后，快照测试报 `--id` 帮助文本由 `"账户 ID"` → `"结算账户 ID"`。根因是工厂把 `label` 同时插进 `Short` 与 flag 帮助文本，而该文件 `Short` 用「结算账户」、flag 用「账户 ID」，二者不可兼得 → 整组回退。
+- **label 一致性成为决定性判据**。据此核对：`settlement`、`write-off`、`receipt-payment` 三者 label 一致，完成迁移；`invoice-apply`（开票申请 vs 申请单 ID）、`account-settlement`（账户结算 vs 结算 ID）不一致，保留手写。
+- **`freight_apply.go` 无需改动**：`init()` 已是工厂写法。
+- 最终迁移 **26 条命令**，`cmd/finance/` **3167 → 2701 行（-466）**。
+
+### check 阶段的修正（回退 4 条 update-status）
+
+首版把 `refund` / `settlement` / `write-off` / `receipt-payment` 的 `update-status` 也迁到
+`CrudUpdateStatusCmd`。`trellis-check` 用真实二进制对比发现：手写版 `--data` 解析失败时
+`hint` 为 `"data 应为 JSON 对象"`，工厂（`internal/cmdutil/crud.go:232`）该参数是 `""`，
+**迁移后 hint 字段从 stderr JSON 中消失**——`--help` diff 与命令树快照都覆盖不到。
+
+已回退这 4 条（恢复手写实现），并补两条护栏：
+
+- `TestMigratedRequiredFlags`：断言迁移命令的 `MarkFlagRequired`（cobra annotation，同样不进 `--help`）。
+- `TestRetainedCommandsPresent`：断言保留手写的命令仍然存在，防后续被误删/误改形状。
+
+> 注：`CrudCreateCmd`（`crud.go:135`）与 `CrudUpdateCmd`（`:162`）的 hint 是完好的，
+> 只有 `CrudUpdateStatusCmd`（`:232`）缺 hint。这也是不能为 finance 单独改工厂的原因——
+> 该工厂另有 4 处调用方（`order_main`、`partner`、`product_category`、`DocumentCmds`），改它会影响它们。
+
+### 等价性证据（回退后重跑）
+
+- `cmd/finance/finance_snapshot_test.go` 的 `TestMigratedCommandSurfaces` 锁定 26 条命令的子命令名 / `Short` / flag 集合（名字、类型、帮助文本）。
+- 重构前后命令树全量快照 `diff` **逐字节一致**。
+- **11 个 finance 子组** `wlt finance <group> --help` 重构前后 `diff` **逐字节一致**（含未改动的 account / invoice-apply / account-settlement / freight-apply）。
+- 4 条回退的 `update-status` 实测 stderr：`"hint":"data 应为 JSON 对象"` 已恢复。
+- `go build ./... && go vet ./... && go test ./... -count=1` 全绿。
+- `gofmt -l` 对本包全部文件（含未改动的）都报 CRLF——`core.autocrlf=true` 的 Windows 既有现象，非本次引入；本次未对其做格式化以免产生整文件伪 diff。
+
 ## 步骤 7 — 收尾验证
 
 ```bash
-gofmt -l cmd/finance/          # 期望无输出
+gofmt -l cmd/finance/          # 本包因 CRLF 全部报出，属既有现象，见上
 go build ./... && go vet ./... && go test ./...
 ```
 

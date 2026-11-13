@@ -42,7 +42,6 @@
 | `finance_prepayment_apply.go:213` | `delete` | `CrudDeleteCmd(…, false)` | 全等 |
 | `finance_refund.go:172` | `create` | `CrudCreateCmd(…)` | 全等 |
 | `finance_refund.go:200` | `update` | `CrudUpdateCmd(…)` | 全等 |
-| `finance_refund.go:252` | `update-status` | `CrudUpdateStatusCmd(…)` | body `--data` — 全等 |
 
 ### B. 必须保留手写（工厂无法表达）
 
@@ -52,15 +51,36 @@
 | `finance_prepayment_apply.go:186` | 同上（`approveStatus`） |
 | `finance_invoice.go:226` | `update-status` 用 `PutQuery` + `{id, status}` |
 | `finance_refund.go:137` | `get` 支持 `--id` **或** `--no` 二选一，工厂只有 `--id` |
-| `finance_refund.go:228` | `delete` 用 `--id` 单删，但工厂 `single=true` 的 flag 名/文案需逐一核对（**见下方待确认项**） |
+| `finance_refund.go:252`、`finance_settlement.go:180`、`finance_write_off.go:242`、`finance_receipt_payment.go:250` | `update-status` 的 `--data` 解析失败 hint 为 `"data 应为 JSON 对象"`，而工厂 `CrudUpdateStatusCmd`（`internal/cmdutil/crud.go:232`）该参数是 `""` —— **迁移会丢 hint**，故保留手写 |
 | 各文件 `page` | 分页子命令名为 `page` 而非 `list`，工厂固定生成 `list`（且 spec 禁止改名） |
 | 各文件 `page-count` | 是否可换 `CrudPageCountCmdWithFixed` 需按文件核对筛选口径（部分文件 `page-count` 用独立 Filters 集合） |
 | 各文件 `summary` / `export` | 工厂不生成 |
 
-### C. 待实现时确认
+### C. 实现期的等价核对结论（已回填）
 
-- `finance_refund.go:228` 的 `delete`：`CrudDeleteCmd(…, true)` 的 `Use`/`Short`/flag 帮助文本是否与现有逐字一致；若 `Short` 文案不同则**保留手写**（本任务零行为变更优先）。
-- `finance_account.go` / `finance_settlement.go` / `finance_account_settlement.go` / `finance_write_off.go` / `finance_receipt_payment.go` / `finance_invoice_apply.go` / `freight_apply.go`：实现前逐函数核对，只迁移落在 A 类的命令；**不在 A 类的一律保留**。
+`finance_account.go` 的 `delete` 先用 `CrudDeleteCmd(…, true)` 试替换，快照测试立刻暴露
+`--id` 帮助文本由 `"账户 ID"` 变成 `"结算账户 ID"`（工厂把 `label` 同时插进 `Short` 与 flag 帮助文本），
+**已回退**。据此对全部候选做了 label 一致性核对：
+
+| 文件 | `Short` 用 label | `--id` 帮助用 label | 结论 |
+|------|-----------------|--------------------|------|
+| payment-apply / invoice / prepayment-apply | 一致 | 一致 | 迁移 get/create/update/delete |
+| refund | 退款单 | 退款单 | 迁移 create/update/delete；get 保留（`--no`）、update-status 保留（hint） |
+| settlement / write-off | 一致 | 一致 | 迁移 get/create/update/delete；update-status 保留（hint） |
+| receipt-payment | 收付款 | 收付款 | 迁移 create/update/delete；get 保留（`--no`）、update-status 保留（hint） |
+| **account** | 结算账户 | **账户** | get/delete 的 label 不一致 → 保留手写 |
+| **invoice-apply** | 开票申请 | **申请单** | 同上 |
+| **account-settlement** | 账户结算 | **结算** | 同上 |
+| freight-apply | 已是工厂写法 | — | 无需改动 |
+
+**最终迁移 26 条命令，`cmd/finance/` 3167 → 2701 行（-466）。**
+
+### D. check 阶段发现并修正的问题
+
+`trellis-check` 独立复核发现首版实现把 4 条 `update-status` 一并迁移，丢失了 `--data` 解析失败的
+错误 `hint`（`"data 应为 JSON 对象"`）——`--help` diff 与命令树快照都覆盖不到这个字段，
+因为 hint 只在实际执行报错时才出现。**已回退这 4 条**，并为迁移命令补了
+`MarkFlagRequired` 断言（同样不进 `--help`）与保留命令的存在性断言。
 
 ## Requirements
 

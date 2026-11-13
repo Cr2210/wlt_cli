@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/cli/index.md", "reason": "Quality Check 全部条目逐条核对；特别是「没有把 page→list 当作全仓规则」与「没有新增 legacy 写法」"}
+{"file": ".trellis/spec/cli/output-protocol.md", "reason": "核对迁移后的命令错误码与输出信封未变（get/create/update/delete 均 NewExitError(5)，ParseJSONData 失败为 4）"}
+{"file": ".trellis/spec/cli/command-factories.md", "reason": "核对只使用了 §1-§6 允许的五类写法，未引入 §8 禁止的 legacy 构造器"}
+{"file": ".trellis/spec/cli/quality-guidelines.md", "reason": "核对快照测试已加且断言了正向存在性"}

@@ -11,16 +11,19 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
+// financeRefundAPIPath 是退款单的后端端点根路径。
+const financeRefundAPIPath = "/erp/finance-refund"
+
 func init() {
 	financeCmd.AddCommand(financeRefundCmd)
 	financeRefundCmd.AddCommand(
 		newFinanceRefundPageCmd(),
 		newFinanceRefundPageCountCmd(),
 		newFinanceRefundGetCmd(),
-		newFinanceRefundCreateCmd(),
-		newFinanceRefundUpdateCmd(),
-		newFinanceRefundDeleteCmd(),
-		newFinanceRefundUpdateStatusCmd(),
+		cmdutil.CrudCreateCmd(financeRefundAPIPath, "退款单"),
+		cmdutil.CrudUpdateCmd(financeRefundAPIPath, "退款单"),
+		cmdutil.CrudDeleteCmd(financeRefundAPIPath, "退款单", true),
+		cmdutil.CrudUpdateStatusCmd(financeRefundAPIPath, "退款单"),
 		newFinanceRefundSummaryCmd(),
 		newFinanceRefundExportExcelCmd(),
 	)
@@ -164,114 +167,6 @@ func newFinanceRefundGetCmd() *cobra.Command {
 	}
 	c.Flags().Int64Var(&id, "id", 0, "退款单 ID")
 	c.Flags().StringVar(&no, "no", "", "退款单编号")
-	return c
-}
-
-// ---- 创建 ----
-
-func newFinanceRefundCreateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "create",
-		Short: "创建退款单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/finance-refund/create", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("创建退款单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 更新 ----
-
-func newFinanceRefundUpdateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update",
-		Short: "更新退款单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-refund/update", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新退款单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 删除 ----
-
-func newFinanceRefundDeleteCmd() *cobra.Command {
-	var id int64
-
-	c := &cobra.Command{
-		Use:   "delete",
-		Short: "删除退款单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/finance-refund/delete", map[string]any{"id": id})
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("删除退款单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().Int64Var(&id, "id", 0, "退款单 ID")
-	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 更新状态 ----
-
-func newFinanceRefundUpdateStatusCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update-status",
-		Short: "更新退款单状态",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-refund/update-status", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新退款单状态失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据（含 id 和 status）")
-	_ = c.MarkFlagRequired("data")
 	return c
 }
 

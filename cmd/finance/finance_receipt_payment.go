@@ -11,16 +11,19 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
+// financeReceiptPaymentAPIPath 是收付款的后端端点根路径。
+const financeReceiptPaymentAPIPath = "/erp/finance-receipt-payment"
+
 func init() {
 	financeCmd.AddCommand(financeReceiptPaymentCmd)
 	financeReceiptPaymentCmd.AddCommand(
 		newFinanceReceiptPaymentPageCmd(),
 		newFinanceReceiptPaymentPageCountCmd(),
 		newFinanceReceiptPaymentGetCmd(),
-		newFinanceReceiptPaymentCreateCmd(),
-		newFinanceReceiptPaymentUpdateCmd(),
-		newFinanceReceiptPaymentDeleteCmd(),
-		newFinanceReceiptPaymentUpdateStatusCmd(),
+		cmdutil.CrudCreateCmd(financeReceiptPaymentAPIPath, "收付款"),
+		cmdutil.CrudUpdateCmd(financeReceiptPaymentAPIPath, "收付款"),
+		cmdutil.CrudDeleteCmd(financeReceiptPaymentAPIPath, "收付款", true),
+		cmdutil.CrudUpdateStatusCmd(financeReceiptPaymentAPIPath, "收付款"),
 		newFinanceReceiptPaymentSummaryCmd(),
 		newFinanceReceiptPaymentExportExcelCmd(),
 	)
@@ -162,114 +165,6 @@ func newFinanceReceiptPaymentGetCmd() *cobra.Command {
 	}
 	c.Flags().Int64Var(&id, "id", 0, "收付款 ID")
 	c.Flags().StringVar(&no, "no", "", "收付款单号")
-	return c
-}
-
-// ---- 创建 ----
-
-func newFinanceReceiptPaymentCreateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "create",
-		Short: "创建收付款",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/finance-receipt-payment/create", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("创建收付款失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 更新 ----
-
-func newFinanceReceiptPaymentUpdateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update",
-		Short: "更新收付款",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-receipt-payment/update", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新收付款失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 删除 ----
-
-func newFinanceReceiptPaymentDeleteCmd() *cobra.Command {
-	var id int64
-
-	c := &cobra.Command{
-		Use:   "delete",
-		Short: "删除收付款",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/finance-receipt-payment/delete", map[string]any{"id": id})
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("删除收付款失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().Int64Var(&id, "id", 0, "收付款 ID")
-	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 更新状态 ----
-
-func newFinanceReceiptPaymentUpdateStatusCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update-status",
-		Short: "更新收付款状态",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-receipt-payment/update-status", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新收付款状态失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据（含 id 和 status）")
-	_ = c.MarkFlagRequired("data")
 	return c
 }
 

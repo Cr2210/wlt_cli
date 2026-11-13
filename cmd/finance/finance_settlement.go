@@ -11,15 +11,18 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
+// financeSettlementAPIPath 是结算单的后端端点根路径。
+const financeSettlementAPIPath = "/erp/finance-settlement"
+
 func init() {
 	financeCmd.AddCommand(financeSettlementCmd)
 	financeSettlementCmd.AddCommand(
 		newFinanceSettlementListCmd(),
-		newFinanceSettlementGetCmd(),
-		newFinanceSettlementCreateCmd(),
-		newFinanceSettlementUpdateCmd(),
-		newFinanceSettlementDeleteCmd(),
-		newFinanceSettlementUpdateStatusCmd(),
+		cmdutil.CrudGetCmd(financeSettlementAPIPath, "结算单"),
+		cmdutil.CrudCreateCmd(financeSettlementAPIPath, "结算单"),
+		cmdutil.CrudUpdateCmd(financeSettlementAPIPath, "结算单"),
+		cmdutil.CrudDeleteCmd(financeSettlementAPIPath, "结算单", true),
+		cmdutil.CrudUpdateStatusCmd(financeSettlementAPIPath, "结算单"),
 		newFinanceSettlementSummaryCmd(),
 		newFinanceSettlementExportExcelCmd(),
 		newFinanceSettlementFinanceRecordCmd(),
@@ -65,138 +68,6 @@ func newFinanceSettlementListCmd() *cobra.Command {
 	c.Flags().StringVar(&status, "status", "", "状态")
 	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
 	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
-	return c
-}
-
-// ---- 获取详情 ----
-
-func newFinanceSettlementGetCmd() *cobra.Command {
-	var id int64
-
-	c := &cobra.Command{
-		Use:   "get",
-		Short: "获取结算单详情",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-settlement/get", map[string]any{"id": id})
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("获取结算单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().Int64Var(&id, "id", 0, "结算单 ID")
-	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 创建 ----
-
-func newFinanceSettlementCreateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "create",
-		Short: "创建结算单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/finance-settlement/create", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("创建结算单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 更新 ----
-
-func newFinanceSettlementUpdateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update",
-		Short: "更新结算单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-settlement/update", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新结算单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 删除 ----
-
-func newFinanceSettlementDeleteCmd() *cobra.Command {
-	var id int64
-
-	c := &cobra.Command{
-		Use:   "delete",
-		Short: "删除结算单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			resp, err := cmdutil.GetClient().Delete(context.Background(), "/erp/finance-settlement/delete", map[string]any{"id": id})
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("删除结算单失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().Int64Var(&id, "id", 0, "结算单 ID")
-	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 更新状态 ----
-
-func newFinanceSettlementUpdateStatusCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update-status",
-		Short: "更新结算单状态",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-settlement/update-status", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新结算单状态失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据（含 id 和 status）")
-	_ = c.MarkFlagRequired("data")
 	return c
 }
 

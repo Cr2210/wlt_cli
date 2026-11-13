@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/cli/command-factories.md", "reason": "工厂选型判据与 Crud*Cmd 单件的真实调用点；§5 判据 4 是本任务的依据，§8 列出禁止引入的 legacy 写法"}
+{"file": ".trellis/spec/cli/index.md", "reason": "Pre-Development Checklist 与 Quality Check；明确「无隐式 base flags」和禁止把 page→list 当全仓规则"}
+{"file": ".trellis/spec/cli/output-protocol.md", "reason": "退出码 1/2/4/5 的实际产出点，迁移后错误码必须不变"}
+{"file": ".trellis/spec/cli/quality-guidelines.md", "reason": "命令层测试类型与风格，快照测试需遵循"}
+{"file": ".trellis/spec/internal/index.md", "reason": "internal 层职责边界；本任务只读复用 cmdutil，不修改 internal"}

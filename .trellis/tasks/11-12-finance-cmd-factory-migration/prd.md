@@ -73,7 +73,13 @@
 | **account-settlement** | 账户结算 | **结算** | 同上 |
 | freight-apply | 已是工厂写法 | — | 无需改动 |
 
-**最终迁移 26 条命令，`cmd/finance/` 3167 → 2701 行（-466）。**
+**最终迁移 35 条命令，`cmd/finance/` 3167 → 2497 行（-670）。**
+
+第二批（用户确认后追加，9 条）：`account` 的 `create`/`update`/`simple-list`、
+`account-settlement` 的 `list`/`create`/`update`、`invoice-apply` 的 `create`/`update`、
+`settlement` 的 `list`。这批的依据是「label 不一致只影响带 `--id` 的命令」——
+`create`/`update`/`update-status`/`list` 的 flag 帮助不含 label，故可迁移。
+其中 `update-status` 仍因 hint 缺失而保留。
 
 ### D. check 阶段发现并修正的问题
 

@@ -59,6 +59,20 @@ var migratedSnapshots = map[string]map[string]string{
 		"update": "update|更新付款申请|data:string:JSON 数据",
 		"delete": "delete|删除付款申请|ids:string:ID 列表（逗号分隔）",
 	},
+	"account": {
+		"create":      "create|创建结算账户|data:string:JSON 数据",
+		"update":      "update|更新结算账户|data:string:JSON 数据",
+		"simple-list": "simple-list|获取结算账户精简列表|",
+	},
+	"account-settlement": {
+		"list":   "list|分页查询账户结算|account-id:string:账户 ID;business-id:string:业务 ID;business-no:string:业务单号;page-no:int:页码;page-size:int:每页数量;settlement-no:string:结算单号;type:string:类型",
+		"create": "create|创建账户结算|data:string:JSON 数据",
+		"update": "update|更新账户结算|data:string:JSON 数据",
+	},
+	"invoice-apply": {
+		"create": "create|创建开票申请|data:string:JSON 数据",
+		"update": "update|更新开票申请|data:string:JSON 数据",
+	},
 	"invoice": {
 		"get":    "get|获取收开票详情|id:int64:收开票 ID",
 		"create": "create|创建收开票|data:string:JSON 数据",
@@ -77,6 +91,7 @@ var migratedSnapshots = map[string]map[string]string{
 		"delete": "delete|删除退款单|id:int64:退款单 ID",
 	},
 	"settlement": {
+		"list":   "list|分页查询结算单|account-id:string:账户 ID;customer-id:string:客户 ID;page-no:int:页码;page-size:int:每页数量;reviewer-id:string:审核人 ID;settlement-no:string:结算单号;status:string:状态;supplier-id:string:供应商 ID",
 		"get":    "get|获取结算单详情|id:int64:结算单 ID",
 		"create": "create|创建结算单|data:string:JSON 数据",
 		"update": "update|更新结算单|data:string:JSON 数据",
@@ -112,6 +127,15 @@ func TestMigratedCommandSurfaces(t *testing.T) {
 var requiredFlags = map[string]map[string][]string{
 	"payment-apply": {
 		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"ids"},
+	},
+	"account": {
+		"create": {"data"}, "update": {"data"},
+	},
+	"account-settlement": {
+		"create": {"data"}, "update": {"data"},
+	},
+	"invoice-apply": {
+		"create": {"data"}, "update": {"data"},
 	},
 	"invoice": {
 		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"ids"},
@@ -152,18 +176,21 @@ func TestMigratedRequiredFlags(t *testing.T) {
 	}
 }
 
-// retainedCommands 是刻意保留手写的命令。它们形状特殊，工厂无法等价表达，
-// 存在性断言防止后续被误删或误改形状。
+// retainedCommands 是刻意保留手写的命令，存在性断言防止后续被误删或误改形状。
+// 保留原因分两类：
+//   - PutQuery 形态：update-status 走 query 参数（id + approveStatus/status），非 body --data
+//   - 等价性缺失：get/delete 的 --id 帮助文本 label 与 Short 不一致；
+//     update-status 的 --data 解析失败 hint 在工厂里是空串
 var retainedCommands = map[string][]string{
-	"payment-apply":    {"update-status"}, // PutQuery + approveStatus
-	"invoice":          {"update-status"}, // PutQuery + status
-	"prepayment-apply": {"update-status"}, // PutQuery + approveStatus
-	"refund":           {"get"},           // --id 或 --no 二选一
-	"receipt-payment":  {"get"},           // --id 或 --no 二选一
-	"account":          {"get", "create", "update", "delete", "update-status"},
-	"invoice-apply":    {"get", "create", "update", "delete", "update-status"},
+	"payment-apply":    {"update-status"},                  // PutQuery + approveStatus
+	"invoice":          {"update-status"},                  // PutQuery + status
+	"prepayment-apply": {"update-status"},                  // PutQuery + approveStatus
+	"refund":           {"get"},                            // --id 或 --no 二选一
+	"receipt-payment":  {"get"},                            // --id 或 --no 二选一
+	"account":          {"get", "delete", "update-status"}, // label 不一致 / hint 缺失
+	"invoice-apply":    {"get", "delete", "update-status"}, // 同上
 	"account-settlement": {
-		"get", "create", "update", "delete",
+		"get", "delete", // label 不一致（Short 用「账户结算」、--id 用「结算 ID」）
 	},
 }
 

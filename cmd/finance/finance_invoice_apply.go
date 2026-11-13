@@ -11,13 +11,16 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
+// financeInvoiceApplyAPIPath 是开票申请的后端端点根路径。
+const financeInvoiceApplyAPIPath = "/erp/finance-invoice-apply"
+
 func init() {
 	financeCmd.AddCommand(financeInvoiceApplyCmd)
 	financeInvoiceApplyCmd.AddCommand(
 		newFinanceInvoiceApplyPageCmd(),
 		newFinanceInvoiceApplyGetCmd(),
-		newFinanceInvoiceApplyCreateCmd(),
-		newFinanceInvoiceApplyUpdateCmd(),
+		cmdutil.CrudCreateCmd(financeInvoiceApplyAPIPath, "开票申请"),
+		cmdutil.CrudUpdateCmd(financeInvoiceApplyAPIPath, "开票申请"),
 		newFinanceInvoiceApplyDeleteCmd(),
 		newFinanceInvoiceApplyUpdateStatusCmd(),
 		newFinanceInvoiceApplySummaryCmd(),
@@ -120,62 +123,6 @@ func newFinanceInvoiceApplyGetCmd() *cobra.Command {
 	}
 	c.Flags().Int64Var(&id, "id", 0, "申请单 ID")
 	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 创建 ----
-
-func newFinanceInvoiceApplyCreateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "create",
-		Short: "创建开票申请",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/finance-invoice-apply/create", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("创建开票申请失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 更新 ----
-
-func newFinanceInvoiceApplyUpdateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update",
-		Short: "更新开票申请",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-invoice-apply/update", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新开票申请失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
 	return c
 }
 

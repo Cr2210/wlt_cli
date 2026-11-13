@@ -11,17 +11,20 @@ import (
 	"github.com/weiliantong/cli/internal/output"
 )
 
+// financeAccountAPIPath 是结算账户的后端端点根路径。
+const financeAccountAPIPath = "/erp/account"
+
 func init() {
 	financeCmd.AddCommand(financeAccountCmd)
 	financeAccountCmd.AddCommand(
 		newFinanceAccountListCmd(),
 		newFinanceAccountGetCmd(),
-		newFinanceAccountCreateCmd(),
-		newFinanceAccountUpdateCmd(),
+		cmdutil.CrudCreateCmd(financeAccountAPIPath, "结算账户"),
+		cmdutil.CrudUpdateCmd(financeAccountAPIPath, "结算账户"),
 		newFinanceAccountDeleteCmd(),
 		newFinanceAccountUpdateStatusCmd(),
 		newFinanceAccountUpdateDefaultStatusCmd(),
-		newFinanceAccountSimpleListCmd(),
+		cmdutil.CrudSimpleListCmd(financeAccountAPIPath, "结算账户"),
 		newFinanceAccountAdjustCmd(),
 		newFinanceAccountTransferCmd(),
 		newFinanceAccountSettlementPageCmd(),
@@ -92,62 +95,6 @@ func newFinanceAccountGetCmd() *cobra.Command {
 	}
 	c.Flags().Int64Var(&id, "id", 0, "账户 ID")
 	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 创建 ----
-
-func newFinanceAccountCreateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "create",
-		Short: "创建结算账户",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Post(context.Background(), "/erp/account/create", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("创建结算账户失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
-	return c
-}
-
-// ---- 更新 ----
-
-func newFinanceAccountUpdateCmd() *cobra.Command {
-	var data string
-
-	c := &cobra.Command{
-		Use:   "update",
-		Short: "更新结算账户",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			body, err := cmdutil.ParseJSONData(data)
-			if err != nil {
-				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
-			}
-			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/account/update", body)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("更新结算账户失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
-	c.Flags().StringVar(&data, "data", "", "JSON 数据")
-	_ = c.MarkFlagRequired("data")
 	return c
 }
 
@@ -230,26 +177,6 @@ func newFinanceAccountUpdateDefaultStatusCmd() *cobra.Command {
 	c.Flags().Int64Var(&id, "id", 0, "账户 ID")
 	c.Flags().BoolVar(&isDefault, "default", false, "是否默认")
 	_ = c.MarkFlagRequired("id")
-	return c
-}
-
-// ---- 简单列表 ----
-
-func newFinanceAccountSimpleListCmd() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "simple-list",
-		Short: "获取结算账户精简列表",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/account/simple-list", nil)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("获取结算账户列表失败: %s", err), "")
-			}
-			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
-		},
-	}
 	return c
 }
 

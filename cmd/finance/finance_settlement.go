@@ -14,10 +14,20 @@ import (
 // financeSettlementAPIPath 是结算单的后端端点根路径。
 const financeSettlementAPIPath = "/erp/finance-settlement"
 
+// financeSettlementListFilters 是结算单列表的筛选字段。
+var financeSettlementListFilters = []cmdutil.FlagSpec{
+	{Name: "settlement-no", Usage: "结算单号"},
+	{Name: "customer-id", Usage: "客户 ID"},
+	{Name: "supplier-id", Usage: "供应商 ID"},
+	{Name: "status", Usage: "状态"},
+	{Name: "account-id", Usage: "账户 ID"},
+	{Name: "reviewer-id", Usage: "审核人 ID"},
+}
+
 func init() {
 	financeCmd.AddCommand(financeSettlementCmd)
 	financeSettlementCmd.AddCommand(
-		newFinanceSettlementListCmd(),
+		cmdutil.CrudListCmd(financeSettlementAPIPath, "结算单", financeSettlementListFilters),
 		cmdutil.CrudGetCmd(financeSettlementAPIPath, "结算单"),
 		cmdutil.CrudCreateCmd(financeSettlementAPIPath, "结算单"),
 		cmdutil.CrudUpdateCmd(financeSettlementAPIPath, "结算单"),
@@ -35,41 +45,6 @@ var financeSettlementCmd = &cobra.Command{
 }
 
 // ---- 分页查询 ----
-
-func newFinanceSettlementListCmd() *cobra.Command {
-	var pageNo, pageSize int
-	var settlementNo, customerId, supplierId, status, accountId, reviewerId string
-
-	c := &cobra.Command{
-		Use:   "list",
-		Short: "分页查询结算单",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.EnsureClient(); err != nil {
-				return err
-			}
-			params := map[string]any{
-				"pageNo":   pageNo,
-				"pageSize": pageSize,
-			}
-			cmdutil.CollectStringFlags(cmd, params, "settlement-no", "customer-id", "supplier-id", "status", "account-id", "reviewer-id")
-
-			resp, err := cmdutil.GetClient().Get(context.Background(), "/erp/finance-settlement/page", params)
-			if err != nil {
-				return output.NewExitError(5, fmt.Sprintf("查询结算单失败: %s", err), "")
-			}
-			return cmdutil.ParsePagedJSON(resp.Data, pageNo, pageSize)
-		},
-	}
-	c.Flags().IntVar(&pageNo, "page-no", 1, "页码")
-	c.Flags().IntVar(&pageSize, "page-size", 20, "每页数量")
-	c.Flags().StringVar(&settlementNo, "settlement-no", "", "结算单号")
-	c.Flags().StringVar(&customerId, "customer-id", "", "客户 ID")
-	c.Flags().StringVar(&supplierId, "supplier-id", "", "供应商 ID")
-	c.Flags().StringVar(&status, "status", "", "状态")
-	c.Flags().StringVar(&accountId, "account-id", "", "账户 ID")
-	c.Flags().StringVar(&reviewerId, "reviewer-id", "", "审核人 ID")
-	return c
-}
 
 // ---- 更新状态 ----
 

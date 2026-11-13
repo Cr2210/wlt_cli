@@ -72,30 +72,26 @@ var migratedSnapshots = map[string]map[string]string{
 		"delete": "delete|删除预付申请|ids:string:ID 列表（逗号分隔）",
 	},
 	"refund": {
-		"create":        "create|创建退款单|data:string:JSON 数据",
-		"update":        "update|更新退款单|data:string:JSON 数据",
-		"delete":        "delete|删除退款单|id:int64:退款单 ID",
-		"update-status": "update-status|更新退款单状态|data:string:JSON 数据（含 id 和 status）",
+		"create": "create|创建退款单|data:string:JSON 数据",
+		"update": "update|更新退款单|data:string:JSON 数据",
+		"delete": "delete|删除退款单|id:int64:退款单 ID",
 	},
 	"settlement": {
-		"get":           "get|获取结算单详情|id:int64:结算单 ID",
-		"create":        "create|创建结算单|data:string:JSON 数据",
-		"update":        "update|更新结算单|data:string:JSON 数据",
-		"delete":        "delete|删除结算单|id:int64:结算单 ID",
-		"update-status": "update-status|更新结算单状态|data:string:JSON 数据（含 id 和 status）",
+		"get":    "get|获取结算单详情|id:int64:结算单 ID",
+		"create": "create|创建结算单|data:string:JSON 数据",
+		"update": "update|更新结算单|data:string:JSON 数据",
+		"delete": "delete|删除结算单|id:int64:结算单 ID",
 	},
 	"write-off": {
-		"get":           "get|获取核销单详情|id:int64:核销单 ID",
-		"create":        "create|创建核销单|data:string:JSON 数据",
-		"update":        "update|更新核销单|data:string:JSON 数据",
-		"delete":        "delete|删除核销单|id:int64:核销单 ID",
-		"update-status": "update-status|更新核销单状态|data:string:JSON 数据（含 id 和 status）",
+		"get":    "get|获取核销单详情|id:int64:核销单 ID",
+		"create": "create|创建核销单|data:string:JSON 数据",
+		"update": "update|更新核销单|data:string:JSON 数据",
+		"delete": "delete|删除核销单|id:int64:核销单 ID",
 	},
 	"receipt-payment": {
-		"create":        "create|创建收付款|data:string:JSON 数据",
-		"update":        "update|更新收付款|data:string:JSON 数据",
-		"delete":        "delete|删除收付款|id:int64:收付款 ID",
-		"update-status": "update-status|更新收付款状态|data:string:JSON 数据（含 id 和 status）",
+		"create": "create|创建收付款|data:string:JSON 数据",
+		"update": "update|更新收付款|data:string:JSON 数据",
+		"delete": "delete|删除收付款|id:int64:收付款 ID",
 	},
 }
 
@@ -107,6 +103,75 @@ func TestMigratedCommandSurfaces(t *testing.T) {
 			if got != want {
 				t.Errorf("%s %s 的 CLI 表面与重构前不一致\n got: %s\nwant: %s", group, name, got, want)
 			}
+		}
+	}
+}
+
+// requiredFlags 锁定迁移命令的必填 flag。
+// 这类信息不进 `--help` 输出，光靠 help diff 覆盖不到，必须单独断言。
+var requiredFlags = map[string]map[string][]string{
+	"payment-apply": {
+		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"ids"},
+	},
+	"invoice": {
+		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"ids"},
+	},
+	"prepayment-apply": {
+		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"ids"},
+	},
+	"refund": {
+		"create": {"data"}, "update": {"data"}, "delete": {"id"},
+	},
+	"settlement": {
+		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"id"},
+	},
+	"write-off": {
+		"get": {"id"}, "create": {"data"}, "update": {"data"}, "delete": {"id"},
+	},
+	"receipt-payment": {
+		"create": {"data"}, "update": {"data"}, "delete": {"id"},
+	},
+}
+
+func TestMigratedRequiredFlags(t *testing.T) {
+	for group, cmds := range requiredFlags {
+		g := findGroup(t, group)
+		for name, wants := range cmds {
+			c := findSub(t, g, name)
+			for _, w := range wants {
+				f := c.Flags().Lookup(w)
+				if f == nil {
+					t.Errorf("%s %s 缺少 flag %q", group, name, w)
+					continue
+				}
+				if f.Annotations[cobra.BashCompOneRequiredFlag] == nil {
+					t.Errorf("%s %s 的 flag %q 未标记为必填", group, name, w)
+				}
+			}
+		}
+	}
+}
+
+// retainedCommands 是刻意保留手写的命令。它们形状特殊，工厂无法等价表达，
+// 存在性断言防止后续被误删或误改形状。
+var retainedCommands = map[string][]string{
+	"payment-apply":    {"update-status"}, // PutQuery + approveStatus
+	"invoice":          {"update-status"}, // PutQuery + status
+	"prepayment-apply": {"update-status"}, // PutQuery + approveStatus
+	"refund":           {"get"},           // --id 或 --no 二选一
+	"receipt-payment":  {"get"},           // --id 或 --no 二选一
+	"account":          {"get", "create", "update", "delete", "update-status"},
+	"invoice-apply":    {"get", "create", "update", "delete", "update-status"},
+	"account-settlement": {
+		"get", "create", "update", "delete",
+	},
+}
+
+func TestRetainedCommandsPresent(t *testing.T) {
+	for group, names := range retainedCommands {
+		g := findGroup(t, group)
+		for _, n := range names {
+			findSub(t, g, n) // 不存在会 t.Fatalf
 		}
 	}
 }

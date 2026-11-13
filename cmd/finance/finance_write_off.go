@@ -23,7 +23,7 @@ func init() {
 		cmdutil.CrudCreateCmd(financeWriteOffAPIPath, "核销单"),
 		cmdutil.CrudUpdateCmd(financeWriteOffAPIPath, "核销单"),
 		cmdutil.CrudDeleteCmd(financeWriteOffAPIPath, "核销单", true),
-		cmdutil.CrudUpdateStatusCmd(financeWriteOffAPIPath, "核销单"),
+		newFinanceWriteOffUpdateStatusCmd(),
 		newFinanceWriteOffSummaryCmd(),
 		newFinanceWriteOffGetItemRelateCmd(),
 		newFinanceWriteOffExportExcelCmd(),
@@ -136,7 +136,33 @@ func newFinanceWriteOffPageCountCmd() *cobra.Command {
 	return c
 }
 
-// ---- 获取详情 ----
+// ---- 更新状态 ----
+
+func newFinanceWriteOffUpdateStatusCmd() *cobra.Command {
+	var data string
+
+	c := &cobra.Command{
+		Use:   "update-status",
+		Short: "更新核销单状态",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.EnsureClient(); err != nil {
+				return err
+			}
+			body, err := cmdutil.ParseJSONData(data)
+			if err != nil {
+				return output.NewExitError(4, fmt.Sprintf("解析 data 失败: %s", err), "data 应为 JSON 对象")
+			}
+			resp, err := cmdutil.GetClient().Put(context.Background(), "/erp/finance-write-off/update-status", body)
+			if err != nil {
+				return output.NewExitError(5, fmt.Sprintf("更新核销单状态失败: %s", err), "")
+			}
+			return cmdutil.OutputJSON(json.RawMessage(resp.Data))
+		},
+	}
+	c.Flags().StringVar(&data, "data", "", "JSON 数据（含 id 和 status）")
+	_ = c.MarkFlagRequired("data")
+	return c
+}
 
 // ---- 汇总数据 ----
 

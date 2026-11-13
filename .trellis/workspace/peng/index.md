@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 1
-- **Last Active**: 2026-11-11
+- **Total Sessions**: 2
+- **Last Active**: 2026-11-13
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~31 | Active |
+| `journal-1.md` | ~56 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 2 | 2026-11-13 | finance 包 CRUD 子命令收敛到 cmdutil 工厂 | `9e496e6`, `82c4ad1`, `ac43829`, `18567c7` | `refactor/finance-cmd-factory-migration` |
 | 1 | 2026-11-11 | 云效 Flow 发布流水线落地 + 项目内禁用 superpowers | `05d8076`, `cae1746`, `a346d23` | `main` |
 <!-- @@@/auto:session-history -->
 
